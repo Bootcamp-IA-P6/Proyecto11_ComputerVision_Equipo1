@@ -1,211 +1,418 @@
-# Plan del Proyecto — Detección de Logos en Vídeo
+# Plan del Proyecto — BrandSight (Coca-Cola vs Pepsi)
 
-Plan realista para **6 días**, **3 compañeros**, entornos **Linux / Mac / Windows**, con entrenamiento en **Google Colab**.
+Aplicación web de análisis de visibilidad de marca: detectar logos en vídeo, comparar tiempo en pantalla, persistir resultados en **base de datos en la nube** y generar un informe de marketing con IA para el cliente Coca-Cola.
+
+**Restricciones:** 6 días · 3 compañeros · Linux / Mac / Windows · entrenamiento en **Google Colab** · aplicación **desplegada**
+
+Documentos relacionados: [BRIEFING_README.md](./BRIEFING_README.md) · [PROJECT_PLAN.md](./PROJECT_PLAN.md) (English) · [KANBAN.md](./KANBAN.md)
 
 ---
 
-## Objetivo realista (definir el Día 1)
+## Resumen del proyecto
 
-Con 6 días y 3 personas, el objetivo alcanzable es **Nivel Medio + la mayor parte del Avanzado**, no el Experto completo (API en cloud + despliegue productivo).
+| Elemento | Detalle |
+|----------|---------|
+| **Nombre** | BrandSight (título provisional) |
+| **Cliente** | Coca-Cola |
+| **Competidor** | Pepsi |
+| **Objetivo** | Medir y comparar la visibilidad de marca en contenido de vídeo |
+| **Stack principal** | YOLOv8 · OpenCV · **Supabase** (PostgreSQL) · Streamlit · API LLM · Deploy cloud |
 
-| Nivel | Veredicto en 6 días |
-|-------|---------------------|
+### Pipeline
+
+```
+Subir vídeo → YOLO detecta Coca-Cola y Pepsi (frame a frame)
+    → Calcular métricas de visibilidad → Guardar en Supabase (+ recortes)
+    → LLM genera informe de marketing para Coca-Cola → Mostrar en la web app
+```
+
+---
+
+## Objetivo principal
+
+Construir un **analizador de visibilidad de marca** (prueba de concepto) que:
+
+1. Detecte los logos de **Coca-Cola** y **Pepsi** en vídeos subidos mediante un modelo YOLO fine-tuned
+2. Calcule tiempo en pantalla, porcentajes, número de detecciones y dominancia competitiva por marca
+3. Persista todos los datos en **Supabase** (PostgreSQL gestionado en la nube)
+4. Genere un **informe de marketing con IA** a partir de las métricas almacenadas (perspectiva analista de Coca-Cola)
+5. Entregue todo mediante una **aplicación web Streamlit desplegada**
+
+**Criterio de éxito en demo:** subir un vídeo de 30–60 s → vídeo anotado → dashboard de métricas → comparativa competitiva → informe IA — todo en la **URL desplegada en vivo**.
+
+---
+
+## Alineación con el briefing
+
+| Requisito del briefing | BrandSight |
+|------------------------|------------|
+| Detección de logos en vídeo | ✅ YOLO — Coca-Cola + Pepsi |
+| Tiempo en pantalla + porcentaje | ✅ Segundos y % por marca |
+| Guardar detecciones en BD | ✅ Supabase (PostgreSQL) |
+| Modelo multimarca (Avanzado) | ✅ 2 clases |
+| % de confianza (Avanzado) | ✅ En overlay + en BD |
+| Recortes bbox (Avanzado) | ✅ Guardados; ruta en BD |
+| Front web (Experto) | ✅ Streamlit — desplegado |
+| Cloud / API (Experto) | ✅ App desplegada; API opcional si sobra tiempo |
+
+---
+
+## Objetivo realista en 6 días
+
+| Nivel | Veredicto |
+|-------|-----------|
 | Esencial | **Obligatorio** (Día 1–2) |
 | Medio | **Obligatorio** (Día 2–3) |
-| Avanzado | **Objetivo** — 2 marcas, confianza %, SQLite, recortes, tiempo en pantalla |
-| Experto | **Parcial** — UI con Streamlit; omitir API cloud salvo que sobre tiempo el Día 5 |
+| Avanzado | **Obligatorio** (Día 3–4) |
+| Experto | **Objetivo** — web app desplegada; omitir microservicio API salvo tiempo libre |
 
-**No perseguir:** FastAPI + Celery + despliegue cloud + precisión perfecta multimarca. Una demo que funcione vale más que un stack “experto” a medias.
+**No perseguir:** precisión perfecta, 10+ marcas, frontend React custom, colas Celery.
 
 ---
 
 ## Roles del equipo (3 personas, doble rol)
 
-Todos programan. PO y Scrum Master son **roles parciales**, no personas que dejan de codear.
+Todos programan. PO y SM son **roles parciales**.
 
-| Persona | Rol principal | Rol secundario | Entregables |
-|---------|---------------|----------------|-------------|
-| **A — Product Owner** | Alcance, prioridades, guion de demo, historia para la presentación | Frontend | `app/streamlit_app.py`, esquema de slides, criterios de aceptación |
-| **B — Scrum Master** | Daily, Kanban, bloqueos, flujo Git/PR | Backend / pipeline | `detect_video.py`, `report.py`, SQLite, Docker, README |
-| **C — ML Engineer** | Dataset, entrenamiento Colab, calidad del modelo | Scripts de inferencia | Roboflow, `notebooks/train_colab.ipynb`, `detect_image.py`, `models/best.pt` |
+| Persona | Principal | Secundario | Entregables |
+|---------|-----------|------------|-------------|
+| **A — Product Owner** | Alcance, guion demo, presentación, prompt del informe IA | Frontend / deploy | UI Streamlit, prompt marketing, slides, criterios de aceptación |
+| **B — Scrum Master** | Daily, Kanban, Git/PR, despliegue y entorno | Backend / pipeline | `detect_video.py`, `report.py`, capa BD, Docker, config deploy |
+| **C — ML Engineer** | Dataset, entrenamiento Colab, calidad del modelo | Inferencia | Roboflow, `train_colab.ipynb`, `detect_image.py`, `models/best.pt` |
 
-**Rotar el rol de SM** si B está bloqueado en ML — quien tenga menos carga ese día facilita el daily de 15 min.
+**Rotar SM** si B está bloqueado en ML.
 
-**Ceremonias (ligeras):**
-- **Daily:** 15 min — ayer / hoy / bloqueos
-- **PO:** mantiene el backlog ordenado; dice “no” al scope creep
-- **SM:** mueve tarjetas en Kanban; PRs mergeados el mismo día
+**Ceremonias:** daily 15 min · PO protege el alcance · SM mergea PRs el mismo día
+
+**Nota de carga:** el ML Engineer es el camino crítico (etiquetado + entrenamiento). PO y SM deben ayudar a etiquetar desde el Día 1.
 
 ---
 
-## Estrategia multi-OS (Linux / Mac / Windows)
-
-**Regla:** entrenar en **un solo sitio** (Colab), inferencia en **un entorno portable** (Python + archivos compartidos).
+## Estrategia multi-OS
 
 | Problema | Solución |
 |----------|----------|
-| GPUs / CUDA distintas | **Entrenar solo en Google Colab** — sin configurar GPU local |
-| Dependencias Python | Un solo `requirements.txt`, Python **3.10 o 3.11** para todos |
-| Separadores de ruta | Usar `pathlib.Path` en todo el código |
-| Finales de línea | `.gitattributes` con `* text=auto` |
-| Pesos del modelo demasiado grandes para Git | **Carpeta compartida en Google Drive** o Git LFS |
-| “En mi máquina funciona” | **Docker** opcional para inferencia (Día 5); no necesario para entrenar |
+| GPU / CUDA distintas | Entrenar **solo en Google Colab** |
+| Dependencias Python | Un `requirements.txt`, Python 3.10–3.11 |
+| Rutas | `pathlib.Path` en todo el código |
+| Finales de línea | `.gitattributes` → `* text=auto` |
+| Pesos del modelo | Google Drive del equipo — no en Git |
+| BD local vs cloud | **Mismo proyecto Supabase** vía `DATABASE_URL`; `.env` local, secrets en plataforma de deploy |
 
 **Artefactos compartidos (fuera de Git):**
 ```
 Team Drive/
-├── datasets/          # zip exportado de Roboflow
-├── models/best.pt     # tras cada entrenamiento en Colab
-└── demo_videos/       # 2–3 clips cortos de prueba
-```
-
-**Setup local (mismos comandos en todos los OS):**
-```bash
-python -m venv .venv
-# Windows: .venv\Scripts\activate
-# Mac/Linux: source .venv/bin/activate
-pip install -r requirements.txt
-python -m src.detect_video --video data/demo/sample.mp4 --weights models/best.pt
+├── datasets/           # export YOLO de Roboflow
+├── models/best.pt
+└── demo_videos/        # 2–3 clips (ambas marcas visibles)
 ```
 
 ---
 
-## Flujo con Google Colab (recomendado)
-
-Colab encaja bien en un sprint de 6 días.
+## Arquitectura técnica
 
 ```
-Roboflow (etiquetar) → exportar zip YOLO
-        ↓
-Notebook Colab (entrenar) → best.pt → Google Drive del equipo
-        ↓
-Todos descargan best.pt → models/
-        ↓
-Inferencia local / Streamlit (CPU vale para clips de demo)
+┌─────────────────────────────────────────────────────────────┐
+│  Web App Streamlit (desplegada — Streamlit Cloud / Railway) │
+│  Subida · Métricas · Gráficos · Informe IA                  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│  Pipeline de análisis (Python)                              │
+│  OpenCV → YOLO (coca_cola, pepsi) → Métricas → Recortes     │
+└──────────────┬─────────────────────────┬────────────────────┘
+               │                         │
+┌──────────────▼──────────┐   ┌──────────▼────────────────────┐
+│  Supabase PostgreSQL    │   │  Supabase Storage (opcional)  │
+│  videos · detections    │   │  bucket: brandsight-crops     │
+│  summaries · reports    │   │  vídeos · crops · informes    │
+└─────────────────────────┘   └─────────────────────────────┘
+               │
+┌──────────────▼──────────────────────────────────────────────┐
+│  API LLM (Gemini / OpenAI) — generación del informe marketing │
+└─────────────────────────────────────────────────────────────┘
+
+Entrenamiento (offline): Roboflow → Google Colab → best.pt → Drive → bundle deploy
 ```
 
-**Checklist del notebook Colab:**
-1. Instalar `ultralytics`
-2. Descargar dataset (API key de Roboflow en secretos de Colab — **no** en el repo)
-3. Entrenar desde `yolov8n.pt` (rápido) o `yolov8s.pt` si los logos son pequeños
-4. Activar augmentations: flip, mosaic, HSV (incluidas en YOLO — mencionarlas en la presentación)
-5. Guardar `best.pt` en Drive
-6. Validación rápida con 2–3 imágenes de test en el notebook
+### Stack tecnológico
 
-**Importante:** subir el notebook a Git; **no** commitear datasets ni pesos.
+| Capa | Elección |
+|------|----------|
+| Detección | Ultralytics YOLOv8 (`yolov8n` o `yolov8s`) |
+| Entrenamiento | Google Colab + Roboflow |
+| Vídeo | OpenCV |
+| Base de datos | **Supabase** (PostgreSQL — tier gratis) |
+| ORM | SQLAlchemy |
+| Migraciones | Alembic (opcional) o script SQL inicial |
+| UI web | Streamlit |
+| Informe IA | API Gemini u OpenAI (una llamada por análisis) |
+| Deploy | **Streamlit Community Cloud** o **Railway** |
+| Secretos | Variables de entorno en plataforma + `.env` local (nunca commitear) |
+| Contenedor | Dockerfile (Railway / reproducibilidad) |
 
 ---
 
-## Decisiones de alcance (ahorran días)
+## Configuración Supabase (Día 1 — SM)
 
-| Decisión | Recomendación |
-|----------|---------------|
-| Número de marcas | **2** (no 4+) — p. ej. Nike + Coca-Cola |
-| Imágenes por marca | **80–150** anotadas (Roboflow + augment → ~300+) |
-| Duración vídeo demo | **30–60 segundos** por clip |
-| Procesado de frames | Cada **3.er–5.o** frame por velocidad; documentar la suposición |
-| Base de datos | **SQLite** (un archivo, funciona en todos los OS) |
-| Frontend | **Solo Streamlit** (no React) |
-| API cloud | **Omitir** o versión “lite”: Streamlit Community Cloud (gratis) |
-| Docker | `Dockerfile` simple para inferencia si hay tiempo el Día 5 |
+1. Crear proyecto en [supabase.com](https://supabase.com/) (tier gratis)
+2. **SQL Editor** → ejecutar `sql/schema.sql` del repo
+3. **Project Settings → Database** → copiar **Connection string** (modo URI)
+4. Usar el string del **Session pooler** para Streamlit / apps servidor
+5. Compartir `DATABASE_URL` con el equipo por canal seguro (no Git)
+6. *(Opcional)* **Storage** → crear bucket `brandsight-crops` (público o URLs firmadas)
+
+**Formato connection string:**
+```
+postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+```
+
+**SQLAlchemy** (si hace falta):
+```
+postgresql+psycopg2://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+```
+
+**Verificar:** Table Editor debe mostrar `videos`, `detections`, `brand_summary`, `competitive_analysis`, `marketing_reports`.
 
 ---
 
-## Plan de 6 días (día a día)
+## Esquema de base de datos (Supabase / PostgreSQL)
 
-### Día 1 — Setup + datos + primer entrenamiento
-**Objetivo:** Esencial iniciado; Kanban activo; esqueleto del repo.
+Archivo SQL: [`sql/schema.sql`](../sql/schema.sql)
+
+```sql
+CREATE TABLE videos (
+    id              SERIAL PRIMARY KEY,
+    filename        VARCHAR(255) NOT NULL,
+    storage_path    TEXT NOT NULL,
+    duration_sec    DOUBLE PRECISION NOT NULL,
+    fps             DOUBLE PRECISION,
+    total_frames    INTEGER,
+    annotated_path  TEXT,
+    status          VARCHAR(20) DEFAULT 'pending',
+    processed_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE detections (
+    id              SERIAL PRIMARY KEY,
+    video_id        INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+    brand           VARCHAR(50) NOT NULL,       -- 'coca_cola' | 'pepsi'
+    confidence      DOUBLE PRECISION NOT NULL,
+    frame_number    INTEGER NOT NULL,
+    timestamp_sec   DOUBLE PRECISION NOT NULL,
+    bbox_x          DOUBLE PRECISION NOT NULL,
+    bbox_y          DOUBLE PRECISION NOT NULL,
+    bbox_w          DOUBLE PRECISION NOT NULL,
+    bbox_h          DOUBLE PRECISION NOT NULL,
+    crop_path       TEXT
+);
+
+CREATE TABLE brand_summary (
+    id              SERIAL PRIMARY KEY,
+    video_id        INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+    brand           VARCHAR(50) NOT NULL,
+    visible_seconds DOUBLE PRECISION NOT NULL,
+    visibility_pct  DOUBLE PRECISION NOT NULL,
+    detection_count INTEGER NOT NULL,
+    avg_confidence  DOUBLE PRECISION,
+    UNIQUE (video_id, brand)
+);
+
+CREATE TABLE competitive_analysis (
+    id                  SERIAL PRIMARY KEY,
+    video_id            INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE UNIQUE,
+    dominant_brand      VARCHAR(50) NOT NULL,
+    coca_cola_seconds   DOUBLE PRECISION NOT NULL,
+    pepsi_seconds       DOUBLE PRECISION NOT NULL,
+    coca_cola_pct       DOUBLE PRECISION NOT NULL,
+    pepsi_pct           DOUBLE PRECISION NOT NULL,
+    visibility_gap_sec  DOUBLE PRECISION NOT NULL,
+    balance_label       VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE marketing_reports (
+    id              SERIAL PRIMARY KEY,
+    video_id        INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+    model_name      VARCHAR(100),
+    prompt_version  VARCHAR(20),
+    report_text     TEXT NOT NULL,
+    report_path     TEXT,
+    generated_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_detections_video_id ON detections(video_id);
+CREATE INDEX idx_detections_brand ON detections(brand);
+```
+
+### Cálculo de visibilidad
+
+```
+frame_interval = 1 / fps   (× sample_stride si se saltan frames)
+
+Por frame muestreado:
+  si coca_cola detectada (conf ≥ 0.5) → coca_frames += 1
+  si pepsi detectada     (conf ≥ 0.5) → pepsi_frames += 1
+
+visible_seconds = frames × frame_interval × sample_stride
+visibility_pct  = (visible_seconds / duration_sec) × 100
+
+dominant_brand  = marca con más visible_seconds
+balance_label   = 'balanced' si gap < 5% duración, si no '{ganador}_dominant'
+```
+
+---
+
+## Generación del informe con IA
+
+**Entrada:** JSON de `brand_summary` + `competitive_analysis` (no el vídeo en bruto).
+
+**Prompt de sistema:**
+> Eres un analista de visibilidad de marca trabajando para Coca-Cola. Redacta un informe de marketing conciso usando solo las métricas proporcionadas. Sé profesional y basado en datos. No inventes cifras.
+
+**Secciones del informe:**
+1. Resumen ejecutivo
+2. Visibilidad de Coca-Cola
+3. Visibilidad competitiva de Pepsi
+4. Comparativa competitiva
+5. Insights de marketing (2–3 viñetas)
+6. Recomendación para Coca-Cola
+
+**Plan B:** plantilla Jinja2 si la API LLM no está disponible en la demo.
+
+**Módulo:** `src/report/generate_marketing_report.py` → guarda en tabla `marketing_reports`.
+
+---
+
+## Funcionalidades de la web app (Streamlit)
+
+| Sección | Funcionalidades |
+|---------|-----------------|
+| Subida | Uploader MP4 + selector de vídeo demo |
+| Procesado | Barra de progreso, estado desde BD |
+| Resultados vídeo | Reproductor del vídeo anotado |
+| Métricas | Duración, segundos/%, detecciones por marca |
+| Comparativa | Gráfico de barras, badge de marca dominante |
+| Detecciones | Tabla + miniaturas de recortes |
+| Informe IA | Markdown renderizado + copiar/descargar |
+| Historial | Análisis anteriores desde Supabase |
+
+---
+
+## Decisiones de alcance
+
+| Decisión | Elección |
+|----------|----------|
+| Marcas | Solo Coca-Cola + Pepsi |
+| Imágenes por marca | 80–120 anotadas |
+| Vídeo demo | 30–60 segundos |
+| Muestreo de frames | Cada 3.er–5.o frame (documentar en README) |
+| Base de datos | **Supabase** (PostgreSQL) |
+| Archivos | Bucket Supabase Storage o directorio temporal + rutas en BD |
+| Frontend | Solo Streamlit |
+| Deploy | Streamlit Cloud o Railway |
+| LLM | Gemini tier gratis u OpenAI |
+
+---
+
+## Plan de sprint — 6 días
+
+### Día 1 — Setup, datos, infra cloud, primer entrenamiento
 
 | Quién | Tareas |
 |-------|--------|
-| PO | Elegir 2 marcas, escribir user stories, crear GitHub Project / Trello |
-| SM | Estructura repo, ramas (`main`, `develop`), `requirements.txt`, `.gitignore`, `.gitattributes` |
-| ML | Proyecto Roboflow, recopilar ~50 img/marca, empezar etiquetado |
-| Todos | Planning 30 min: definición de “hecho” por nivel |
+| PO | Cerrar alcance Coca-Cola/Pepsi, user stories, tablero GitHub Project |
+| SM | Esqueleto repo, ramas, `requirements.txt`, `.gitignore`, `.env.example` |
+| SM | **Crear proyecto Supabase**, ejecutar `sql/schema.sql`, compartir `DATABASE_URL` |
+| ML | Proyecto Roboflow, ~50 img/marca, empezar etiquetado |
+| Todos | Planning 30 min: definición de hecho |
 
-**Fin de día:** 50+ imágenes etiquetadas, notebook Colab con entrenamiento smoke de 10 epochs.
+**Fin de día:** Supabase operativa · 50+ imágenes etiquetadas · smoke train Colab (10 epochs)
 
 ---
 
 ### Día 2 — Esencial COMPLETADO
-**Objetivo:** Una imagen → bounding box + nombre de marca.
 
 | Quién | Tareas |
 |-------|--------|
-| ML | Terminar etiquetado, entrenamiento completo en Colab, exportar `best.pt` a Drive |
-| Backend | `detect_image.py`, descargar pesos, probar en 3 OS |
-| PO | README: setup, cómo ejecutar, descripción del dataset |
+| ML | Terminar etiquetado, entrenamiento Colab completo, `best.pt` → Drive |
+| Backend | `detect_image.py`, módulo conexión BD, test insert en los 3 OS |
+| PO | README: setup, variables de entorno, cómo ejecutar |
 
-**Fin de día:** Demo con **una imagen** desde el portátil de cualquier compañero.
+**Fin de día:** Detección en imagen con bbox + marca · conexión BD funciona en local
 
 ---
 
 ### Día 3 — Medio COMPLETADO
-**Objetivo:** Vídeo → vídeo anotado + etiqueta bajo cada detección.
 
 | Quién | Tareas |
 |-------|--------|
-| Backend | `detect_video.py` (OpenCV + Ultralytics), guardar MP4 de salida |
-| ML | Reentrenar si el mAP del Día 2 es malo; añadir frames difíciles del vídeo |
-| PO/SM | Grabar 2 vídeos demo; actualizar Kanban |
+| Backend | `detect_video.py` — MP4 anotado, etiquetas + confianza en overlay |
+| ML | Reentrenar si hace falta; añadir frames difíciles de los vídeos demo |
+| PO/SM | Grabar 2 vídeos demo (ambas marcas); actualizar Kanban |
 
-**Fin de día:** Vídeo de 30 s con cajas + nombres de clase visibles.
+**Fin de día:** Demo vídeo 30 s anotado · datos escritos en Supabase
 
 ---
 
-### Día 4 — Avanzado (núcleo)
-**Objetivo:** Tiempo en pantalla + confianza + base de datos.
+### Día 4 — Avanzado COMPLETADO
 
 | Quién | Tareas |
 |-------|--------|
-| Backend | `report.py`: segundos + % por marca; esquema SQLite + inserts |
-| ML | Dataset multiclase (2 marcas), reentrenar en Colab |
-| Backend | Guardar recortes en `data/crops/` + rutas en BD |
-| Todos | Mostrar % de confianza en el overlay del vídeo |
+| Backend | `report.py` — métricas visibilidad, `brand_summary`, `competitive_analysis` |
+| Backend | Guardar recortes bbox, rutas en `detections` |
+| ML | Entrenamiento final 2 clases en Colab si métricas flojas |
+| Backend | `generate_marketing_report.py` — llamada LLM + insert en BD |
 
-**Fin de día:** Informe JSON/texto + fichero SQLite + carpeta de crops.
+**Fin de día:** Métricas completas + análisis competitivo + informe IA en BD
 
 ---
 
-### Día 5 — Pulido Avanzado + Experto-lite
-**Objetivo:** Streamlit + borrador de presentación.
+### Día 5 — Web app + despliegue
 
 | Quién | Tareas |
 |-------|--------|
-| PO / Frontend | Streamlit: subir vídeo → ejecutar pipeline → mostrar informe + tabla |
-| SM | Dockerfile (opcional), README limpio, merge a `main` |
-| ML | Pasada final del modelo; 3 slides sobre entrenamiento / augmentations |
-| Todos | Ensayo de demo (15 min) |
+| PO | UI Streamlit: subir → pipeline → métricas + gráfico + informe IA |
+| SM | `Dockerfile`, deploy en **Streamlit Cloud o Railway** |
+| SM | Configurar secrets: `DATABASE_URL`, `GEMINI_API_KEY` / `OPENAI_API_KEY` |
+| ML | Verificación final del modelo en app desplegada |
+| Todos | Ensayo en **URL en vivo** (15 min) |
 
-**Fin de día:** Streamlit funciona en local; opcional despliegue en Streamlit Cloud.
+**Fin de día:** URL pública/desplegada funcionando de punta a punta
 
 ---
 
 ### Día 6 — Buffer + entrega
-**Objetivo:** Nada nuevo — corregir, ensayar, documentar.
 
-- Corregir bugs por OS (rutas, codec de vídeo)
-- Presentación: problema → dataset → fine-tune YOLO → pipeline → demo → limitaciones
-- Kanban: todas las tarjetas en Hecho o No se hará (con motivo)
-- Tag de release `v1.0-demo`
+| Quién | Tareas |
+|-------|--------|
+| Todos | Corregir bugs de deploy, cross-OS, codec vídeo en Windows |
+| PO | Presentación: problema → arquitectura → demo en URL en vivo → limitaciones |
+| SM | Kanban cerrado, tag `v1.0-demo`, sección deploy en README |
+| Todos | Ensayo final |
+
+**Fin de día:** Demo en vivo + presentación listas
 
 ---
 
-## Columnas Kanban (simple)
+## Tarjetas Kanban
+
+Tablero completo con incidencias, descripciones y responsables: **[KANBAN.md](./KANBAN.md)**
 
 ```
 Backlog → Por hacer → En progreso → En revisión → Hecho
 ```
 
-**Tarjetas mínimas:**
-1. Dataset + Roboflow
-2. Notebook entrenamiento Colab
-3. Detección en imagen
-4. Detección en vídeo + etiquetas
-5. Informe tiempo / %
-6. SQLite + recortes
-7. UI Streamlit
-8. README + presentación
+1. Dataset Roboflow (Coca-Cola + Pepsi) — **C**
+2. Schema Supabase + capa de conexión — **B**
+3. Notebook entrenamiento Colab — **C**
+4. Detección en imagen — **C**
+5. Detección en vídeo + etiquetas + confianza — **B**
+6. Métricas visibilidad + análisis competitivo — **B**
+7. Recortes bbox + persistencia BD — **B**
+8. Generador informe marketing IA — **A**
+9. Web app Streamlit — **A**
+10. **Despliegue en cloud** — **B**
+11. README + presentación — **A**
 
 ---
 
@@ -213,142 +420,90 @@ Backlog → Por hacer → En progreso → En revisión → Hecho
 
 | Riesgo | Mitigación |
 |--------|------------|
-| Etiquetado lento | 2 marcas; auto-label Roboflow + corrección manual |
-| Colab se desconecta | Guardar checkpoints en Drive cada 10 epochs |
-| Modelo malo en vídeo | Fine-tune con frames extraídos de los vídeos demo |
-| Problemas codec en Windows | Usar `.mp4` H.264; probar en Windows el Día 3 |
-| Compañero bloqueado en setup | Pairing 30 min con SM; Colab elimina dolor de GPU |
-| Scope creep hacia Experto | PO congela backlog tras el almuerzo del Día 3 |
+| Etiquetado lento | Los 3 etiquetan; solo 2 marcas; auto-label Roboflow + corrección |
+| Colab se desconecta | Checkpoints en Drive cada 10 epochs |
+| Fallo conexión BD en deploy | Probar `DATABASE_URL` desde plataforma el Día 1 |
+| Límites tier gratis Supabase | Vídeos demo cortos; muestreo de frames |
+| API LLM caída en demo | Plantilla Jinja2 de respaldo |
+| Modelo flojo en vídeo | Fine-tune con frames de vídeos demo |
+| Problemas codec Windows | MP4 H.264; probar Día 3 |
+| Deploy falla Día 5 | Empezar config deploy Día 1 (app vacía + ping BD) |
 
 ---
 
-## Qué decir en la presentación (criterios de evaluación)
-
-Mencionar explícitamente:
-- **Preprocesado:** resize/normalize YOLO (640px), muestreo de frames
-- **Dataset propio:** Roboflow, formato YOLO, split train/val
-- **Preentrenado + fine-tune:** `yolov8n.pt` → vuestros logos
-- **Augmentations:** flip, mosaic, HSV en config de entrenamiento
-- **“Tiempo real”:** opcional — mostrar FPS en portátil o aclarar “análisis por lotes, no streaming en vivo”
-- **BD:** esquema SQLite + recortes guardados
-
----
-
-## Stack tecnológico recomendado
-
-### Principio central
-
-Usar **un solo framework de detección de punta a punta** (entrenar → inferir en imagen/vídeo → exportar métricas) en lugar de mezclar TensorFlow + PyTorch + Detectron2.
-
-### Modelo — YOLO vía Ultralytics (PyTorch)
-
-| Opción | Veredicto |
-|--------|-----------|
-| **YOLOv8 / YOLO11 (Ultralytics)** | **Mejor opción por defecto** — rápido de entrenar, buena documentación, multiclase, scores de confianza, inferencia en vídeo integrada |
-| Faster R-CNN / Detectron2 | Buena precisión, setup pesado; excesivo para PoC de logos |
-| SSD | Término medio; menos ecosistema que YOLO hoy |
-| TensorFlow/Keras | Vale si el equipo ya lo domina; si no, añade fricción |
-
-```
-Preentrenado: yolov8n.pt (demo rápida) o yolov8s.pt (mejor precisión)
-Fine-tune sobre dataset de logos (formato YOLO)
-```
-
-### Librerías
-
-| Capa | Elección | Rol |
-|------|----------|-----|
-| **Python 3.10+** | Lenguaje principal | Entrenamiento, pipeline, API, UI |
-| **Ultralytics** | Entrenamiento + inferencia | Ciclo de vida del modelo |
-| **OpenCV** | I/O vídeo, frames, overlay | Pipeline de vídeo |
-| **Pillow** | Recortes para BD | Guardar crops de bounding boxes |
-| **Albumentations** (opc.) | Augmentations extra | flip, color jitter, crop |
-| **pandas** | Agregaciones | Tiempo por marca, % del vídeo |
-
-### Dataset y anotación
-
-| Herramienta | Uso |
-|-------------|-----|
-| **Roboflow** (tier gratis) | Anotar cajas, exportar YOLO, augmentations |
-| **Label Studio** / **CVAT** | Alternativa self-hosted |
-| **Recolección manual** | Capturas de anuncios, deportes, YouTube (cuidado con licencias) |
-
-**Formato:** labels YOLO txt (`class x_center y_center width height` normalizado).
-
-### Pipeline de análisis de vídeo
-
-```
-Vídeo → OpenCV lee frames → YOLO predict (umbral conf) →
-presencia por frame → agregar tiempo por marca → informe + insert BD
-```
-
-### Base de datos — SQLite → PostgreSQL
-
-| Tabla | Campos (ejemplo) |
-|-------|------------------|
-| `videos` | id, filename, duration_sec, processed_at |
-| `detections` | id, video_id, brand, confidence, timestamp_sec, bbox, crop_path |
-| `video_summary` | video_id, brand, total_seconds, percentage |
-
-| Nivel | BD |
-|-------|-----|
-| PoC / local | **SQLite** + SQLAlchemy |
-| Experto / cloud | **PostgreSQL** (misma ORM, migración fácil) |
-
-### Frontend y API (nivel Experto)
-
-| Capa | Elección |
-|------|----------|
-| UI demo | **Streamlit** |
-| API (si hay tiempo) | **FastAPI** |
-| Contenedor | **Docker** (CUDA opcional; CPU vale para demo) |
-| Cloud | Streamlit Cloud, Railway, Render, Hugging Face Spaces |
-
-### Stack resumido del equipo
-
-```
-Python 3.11
-Ultralytics YOLOv8
-OpenCV + Pillow
-Roboflow (anotación)
-SQLite + SQLAlchemy
-Streamlit (UI)
-Docker
-GitHub Projects (Kanban)
-Google Colab (entrenamiento GPU)
-```
-
-### Estructura sugerida del repo
+## Estructura del repo
 
 ```
 ai-computer-vision-objects/
+├── app/
+│   └── streamlit_app.py
 ├── data/
-│   ├── raw/
-│   ├── datasets/
-│   └── crops/
-├── models/
+│   └── demo/
+├── docs/
+│   ├── BRIEFING_README.md
+│   ├── PROJECT_PLAN.md
+│   └── PLAN_PROYECTO.md
+├── models/                   # best.pt (gitignored)
+├── notebooks/
+│   └── train_colab.ipynb
 ├── src/
+│   ├── db/
+│   │   ├── connection.py
+│   │   ├── models.py
+│   │   └── repository.py
 │   ├── detect_image.py
 │   ├── detect_video.py
-│   ├── report.py
-│   └── db/
-├── app/                  # Streamlit
-├── notebooks/            # train_colab.ipynb
+│   ├── metrics.py
+│   └── report/
+│       └── generate_marketing_report.py
+├── sql/
+│   └── schema.sql
+├── .env.example
 ├── Dockerfile
+├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## Trade-offs a decidir pronto
+## Variables de entorno
 
-1. **Precisión vs velocidad de demo:** `yolov8n` entrena rápido; `yolov8s/m` si los logos son pequeños en frame.
-2. **Frames:** todos vs cada 5.º — afecta la precisión del “tiempo en pantalla”.
-3. **Un solo repo** es suficiente para este alcance.
-4. **GPU:** entrenar en Colab/Kaggle; inferencia en CPU OK para clips cortos.
+```bash
+# .env.example — nunca commitear valores reales
+# Supabase → Project Settings → Database → Connection string (URI)
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+
+# Opcional — Supabase Storage para crops/vídeos
+SUPABASE_URL=https://[project-ref].supabase.co
+SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
+
+GEMINI_API_KEY=tu_clave_aqui          # o OPENAI_API_KEY
+MODEL_PATH=models/best.pt
+CONFIDENCE_THRESHOLD=0.5
+SAMPLE_STRIDE=3
+```
+
+---
+
+## Descripción para la presentación (lista para copiar)
+
+**Pitch corto:**
+
+> **BrandSight** analiza contenido de vídeo para medir la visibilidad de **Coca-Cola** frente a su competidor **Pepsi**. Un modelo YOLO personalizado detecta ambos logos frame a frame, calcula el tiempo en pantalla y la dominancia competitiva, guarda cada resultado en **Supabase** y genera un informe de marketing con IA — todo desde una **aplicación web desplegada**.
+
+**Estructura de slides:**
+1. Problema — el cliente necesita métricas de visibilidad vs competencia
+2. Solución — pipeline BrandSight
+3. Arquitectura — YOLO + Supabase + Streamlit + LLM
+4. Demo — recorrido por URL en vivo
+5. Stack y entrenamiento (Colab, augmentations)
+6. Limitaciones y trabajo futuro (más marcas, API, tiempo real)
 
 ---
 
 ## Referencias
 
+- [Roadmap del bootcamp](https://roadmap-mad-ai-p4.coderf5.es/)
 - [Documentación Ultralytics YOLO](https://docs.ultralytics.com/)
+- [Supabase](https://supabase.com/) · [SQL Editor Supabase](https://supabase.com/docs/guides/database/overview)
+- [Deploy Streamlit Cloud](https://docs.streamlit.io/streamlit-community-cloud)
