@@ -2,8 +2,6 @@
 
 Plan realista para **6 días**, **3 compañeros**, entornos **Linux / Mac / Windows**, con entrenamiento en **Google Colab**.
 
-Documentos relacionados: [BRIEFING_README.md](./BRIEFING_README.md) · [PROJECT_PLAN.md](./PROJECT_PLAN.md) (stack en inglés)
-
 ---
 
 ## Objetivo realista (definir el Día 1)
