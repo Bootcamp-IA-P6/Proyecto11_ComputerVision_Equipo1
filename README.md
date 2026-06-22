@@ -25,6 +25,7 @@ Step-by-step: **[docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)** (ISSUE-03)
 
 ```bash
 python -m scripts.check_db
+python -m scripts.test_db_insert   # round-trip insert into videos (ISSUE-04)
 ```
 
 ### 4. Add model weights
