@@ -1,3 +1,5 @@
+"""Supabase PostgreSQL connection — engine, sessions, and schema checks."""
+
 from collections.abc import Generator
 from contextlib import contextmanager
 
@@ -26,6 +28,7 @@ def _normalize_database_url(url: str) -> str:
 
 
 def get_engine() -> Engine:
+    """Return a cached SQLAlchemy engine (reads ``DATABASE_URL`` from settings)."""
     global _engine, _SessionLocal
     if _engine is None:
         settings = get_settings()
@@ -49,6 +52,7 @@ def get_session_factory() -> sessionmaker[Session]:
 
 @contextmanager
 def get_db_session() -> Generator[Session, None, None]:
+    """Context manager: commit on success, rollback on error, always close."""
     session = get_session_factory()()
     try:
         yield session

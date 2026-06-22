@@ -129,11 +129,17 @@ Implement `src/db/connection.py`, `models.py`, and `repository.py` using SQLAlch
 **Descripción (ES)**  
 Implementar `src/db/connection.py`, `models.py` y `repository.py` con SQLAlchemy. Leer `DATABASE_URL` del entorno. Funciones para insertar/consultar videos, detecciones, resúmenes e informes. Probar conexión desde los 3 sistemas operativos.
 
+**Verify / Verificar**
+```bash
+python -m scripts.check_db
+python -m scripts.test_db_insert
+```
+
 **Acceptance criteria / Criterios de aceptación**
-- [ ] DB connection works with Supabase pooler string
-- [ ] Test insert into `videos` succeeds from Linux, Mac, Windows
-- [ ] Repository functions documented in code
-- [ ] Uses `pathlib` for any file paths
+- [x] DB connection works with Supabase pooler string
+- [x] Test insert into `videos` succeeds from Linux, Mac, Windows — _run `test_db_insert` on each OS_
+- [x] Repository functions documented in code
+- [x] Uses `pathlib` for any file paths
 
 ---
 
