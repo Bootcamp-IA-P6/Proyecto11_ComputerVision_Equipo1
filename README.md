@@ -94,6 +94,7 @@ docker run -p 8501:8501 --env-file .env brandsight
 - [Plan (ES)](docs/PLAN_PROYECTO.md)
 - [Kanban](docs/KANBAN.md)
 - [Supabase setup](docs/SUPABASE_SETUP.md)
+- [Roboflow dataset](docs/ROBOFLOW_DATASET.md)
 - [Briefing](docs/BRIEFING_README.md)
 
 ## Brands (YOLO classes)
