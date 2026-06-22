@@ -15,6 +15,8 @@ cp .env.example .env
 
 ### 2. Supabase
 
+Step-by-step: **[docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)** (ISSUE-03)
+
 1. Create a project at [supabase.com](https://supabase.com/)
 2. Run `sql/schema.sql` in the SQL Editor
 3. Copy the **Session pooler** connection string into `.env` as `DATABASE_URL`
@@ -23,6 +25,7 @@ cp .env.example .env
 
 ```bash
 python -m scripts.check_db
+python -m scripts.test_db_insert   # round-trip insert into videos (ISSUE-04)
 ```
 
 ### 4. Add model weights
@@ -52,7 +55,8 @@ data/
   crops/              Saved logo crops
   uploads/            Uploaded videos (runtime)
 models/               best.pt (not in Git)
-sql/schema.sql        Supabase schema
+sql/schema.sql        Supabase schema (5 tables)
+sql/storage.sql       Optional Storage bucket for crops
 notebooks/            Colab training (to add)
 docs/                 Project plans + Kanban
 ```
@@ -89,6 +93,7 @@ docker run -p 8501:8501 --env-file .env brandsight
 - [Project plan](docs/PROJECT_PLAN.md)
 - [Plan (ES)](docs/PLAN_PROYECTO.md)
 - [Kanban](docs/KANBAN.md)
+- [Supabase setup](docs/SUPABASE_SETUP.md)
 - [Briefing](docs/BRIEFING_README.md)
 
 ## Brands (YOLO classes)
