@@ -38,7 +38,7 @@ Build a proof-of-concept **brand visibility analyzer** that:
 4. Generates an **AI marketing report** from stored metrics (Coca-Cola analyst perspective)
 5. Delivers everything through a **deployed Streamlit web application**
 
-**Demo success criteria:** upload a 30–60s video → annotated output → metrics dashboard → competitive comparison → AI report — all running on the **live deployed URL**.
+**Demo success criteria:** upload a 30–60s video → annotated output → metrics dashboard → competitive comparison → AI report — all on the **live deployed URL**; plus a **local webcam segment** during presentation (`detect_webcam.py`).
 
 ---
 
@@ -47,6 +47,7 @@ Build a proof-of-concept **brand visibility analyzer** that:
 | Briefing requirement | BrandSight |
 |---------------------|------------|
 | Custom logo detection in video | ✅ YOLO — Coca-Cola + Pepsi |
+| Real-time detection (evaluation criteria) | ✅ `detect_webcam.py` — **local only**, not on deploy |
 | Time on screen + percentage | ✅ Per-brand seconds and % |
 | Save detections in database | ✅ Supabase (PostgreSQL) |
 | Multi-brand model (Advanced) | ✅ 2 classes |
@@ -78,7 +79,7 @@ Everyone codes. PO and SM are **part-time hats**.
 |--------|---------|-----------|--------------|
 | **A — Product Owner** | Scope, demo script, presentation, AI report prompt | Frontend / deploy | Streamlit UI, marketing prompt, slides, acceptance criteria |
 | **B — Scrum Master** | Daily, Kanban, Git/PR, deployment & env | Backend / pipeline | `detect_video.py`, `report.py`, DB layer, Docker, deploy config |
-| **C — ML Engineer** | Dataset, Colab training, model quality | Inference | Roboflow, `train_colab.ipynb`, `detect_image.py`, `models/best.pt` |
+| **C — ML Engineer** | Dataset, Colab training, model quality | Inference | Roboflow, `train_colab.ipynb`, `detect_image.py`, `detect_webcam.py`, `models/best.pt` |
 
 **Rotate SM** when B is blocked on ML.
 
@@ -296,6 +297,8 @@ balance_label   = 'balanced' if gap < 5% of duration, else '{winner}_dominant'
 | AI Report | Rendered markdown + copy/download |
 | History | Past analyses from Supabase |
 
+**Note:** realtime webcam detection lives in **`src/detect_webcam.py` (local)** — not in the deployed Streamlit app. Used during the live presentation segment.
+
 ---
 
 ## Scope Decisions
@@ -305,6 +308,7 @@ balance_label   = 'balanced' if gap < 5% of duration, else '{winner}_dominant'
 | Brands | Coca-Cola + Pepsi only |
 | Images per brand | 80–120 annotated |
 | Demo video | 30–60 seconds |
+| Realtime webcam | **`detect_webcam.py` — local only** (OpenCV + YOLO); not in production |
 | Frame sampling | Every 3rd–5th frame (document in README) |
 | Database | **Supabase** (PostgreSQL) |
 | File storage | Supabase Storage bucket or app temp dir + DB paths |
@@ -336,6 +340,7 @@ balance_label   = 'balanced' if gap < 5% of duration, else '{winner}_dominant'
 |-----|--------|
 | ML | Finish labeling, full Colab train, `best.pt` → Drive |
 | Backend | `detect_image.py`, DB connection module, test insert on all OS |
+| ML | Start `detect_webcam.py` once `best.pt` is available |
 | PO | README: setup, env vars, how to run |
 
 **End of day:** Single-image detection with bbox + brand label · DB connection works locally
@@ -347,10 +352,10 @@ balance_label   = 'balanced' if gap < 5% of duration, else '{winner}_dominant'
 | Who | Tasks |
 |-----|--------|
 | Backend | `detect_video.py` — annotated MP4, labels + confidence on overlay |
-| ML | Retrain if needed; add hard frames from demo videos |
+| ML | Finish `detect_webcam.py`; retrain if needed; add hard frames from demo videos |
 | PO/SM | Record 2 demo videos (both brands); update Kanban |
 
-**End of day:** 30s annotated video demo · data written to Supabase
+**End of day:** 30s annotated video demo · local webcam working · data written to Supabase
 
 ---
 
@@ -406,13 +411,14 @@ Backlog → To Do → In Progress → In Review → Done
 2. Supabase schema + connection layer — **B**
 3. Colab training notebook — **C**
 4. Image detection — **C**
-5. Video detection + labels + confidence — **B**
-6. Visibility metrics + competitive analysis — **B**
-7. Bbox crops + DB persistence — **B**
-8. AI marketing report generator — **A**
-9. Streamlit web app — **A**
-10. **Cloud deployment** — **B**
-11. README + presentation — **A**
+5. Local webcam detection — **C**
+6. Video detection + labels + confidence — **B**
+7. Visibility metrics + competitive analysis — **B**
+8. Bbox crops + DB persistence — **B**
+9. AI marketing report generator — **A**
+10. Streamlit web app — **A**
+11. **Cloud deployment** — **B**
+12. README + presentation — **A**
 
 ---
 
@@ -452,6 +458,7 @@ ai-computer-vision-objects/
 │   │   ├── models.py
 │   │   └── repository.py
 │   ├── detect_image.py
+│   ├── detect_webcam.py      # realtime local webcam — not deployed
 │   ├── detect_video.py
 │   ├── metrics.py
 │   └── report/
@@ -497,7 +504,7 @@ SAMPLE_STRIDE=3
 3. Architecture — YOLO + Supabase + Streamlit + LLM
 4. Demo — live URL walkthrough
 5. Tech stack & training (Colab, augmentations)
-6. Limitations & future work (more brands, API, real-time)
+6. Limitations & future work (more brands, webcam on cloud, REST API)
 
 ---
 
