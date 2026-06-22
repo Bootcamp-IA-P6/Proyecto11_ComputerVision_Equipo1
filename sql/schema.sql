@@ -1,5 +1,6 @@
--- BrandSight — Supabase schema
+-- BrandSight — Supabase schema (ISSUE-03)
 -- Run in Supabase SQL Editor: Dashboard → SQL → New query
+-- Verify locally: python -m scripts.check_db
 
 CREATE TABLE IF NOT EXISTS videos (
     id              SERIAL PRIMARY KEY,
