@@ -24,7 +24,7 @@ Related: [PROJECT_PLAN.md](./PROJECT_PLAN.md) · [PLAN_PROYECTO.md](./PLAN_PROYE
 
 | To Do | In Progress | In Review | Done |
 |-------|-------------|-----------|------|
-| 16 | 0 | 1 | 0 |
+| 16 | 0 | 0 | 0 |
 
 _Update counts as cards move. / Actualizar contadores al mover tarjetas._
 
@@ -62,7 +62,7 @@ Inicializar el repositorio GitHub con estrategia de ramas (`main`, `develop`), e
 
 | Field | Value |
 |-------|-------|
-| **Status** | In Review |
+| **Status** | To Do |
 | **Sprint day** | Day 1 |
 | **Responsible** | **A** (PO) |
 | **Support** | B, C |
