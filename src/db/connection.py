@@ -7,6 +7,14 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from src.config import get_settings
 
+EXPECTED_TABLES: tuple[str, ...] = (
+    "videos",
+    "detections",
+    "brand_summary",
+    "competitive_analysis",
+    "marketing_reports",
+)
+
 _engine: Engine | None = None
 _SessionLocal: sessionmaker[Session] | None = None
 
@@ -56,3 +64,20 @@ def check_connection() -> bool:
     with get_engine().connect() as conn:
         conn.execute(text("SELECT 1"))
     return True
+
+
+def verify_schema() -> list[str]:
+    """Return public table names from EXPECTED_TABLES that are missing."""
+    missing: list[str] = []
+    with get_engine().connect() as conn:
+        for table in EXPECTED_TABLES:
+            row = conn.execute(
+                text(
+                    "SELECT 1 FROM information_schema.tables "
+                    "WHERE table_schema = 'public' AND table_name = :name"
+                ),
+                {"name": table},
+            ).fetchone()
+            if row is None:
+                missing.append(table)
+    return missing
