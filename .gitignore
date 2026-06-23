@@ -7,7 +7,10 @@ __pycache__/
 .mypy_cache/
 data/crops/
 data/demo/*.mp4
+data/demo/*.m4a
 data/uploads/
+data/outputs/
+!data/outputs/.gitkeep
 .DS_Store
 *.egg-info/
 dist/
