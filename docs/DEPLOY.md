@@ -36,8 +36,7 @@ Repo files used automatically:
 | File                     | Purpose                              |
 | ------------------------ | ------------------------------------ |
 | `requirements.txt`       | Python dependencies                  |
-| `packages.txt`           | Optional system lib for OpenCV (`libgl1`)           |
-| `runtime.txt`            | Python 3.11                          |
+| `runtime.txt`            | Python 3.12 (change version to bust stale venv) |
 | `.streamlit/config.toml` | Headless server, 200 MB upload limit |
 
 
@@ -84,8 +83,8 @@ SAMPLE_STRIDE = "3"
 | `DATABASE_URL is not set`        | Add secrets in Streamlit Cloud settings; redeploy                             |
 | `password authentication failed` | Use **Session pooler** URI; user must be `postgres.[project-ref]`             |
 | `Model not found`                | Ensure `models/best.pt` is on the deployed branch                             |
-| OpenCV / libGL error             | Use `ultralytics-opencv-headless` (not `ultralytics`); keep `libgl1` in `packages.txt` if needed |
-| `libgthread-2.0.so.0` missing    | Plain `ultralytics` pulls `opencv-python` (GUI). Switch to `ultralytics-opencv-headless` and reboot |
+| OpenCV / libGL error             | Use `ultralytics-opencv-headless` + `opencv-python-headless`; no `packages.txt` needed |
+| `libgthread-2.0.so.0` missing    | Stale `opencv-python` in cached venv — **Reboot app** (not Rerun); set Python **3.12** in app settings + `runtime.txt` |
 | Analysis timeout                 | Use shorter video or increase `SAMPLE_STRIDE` in secrets                      |
 | Crops missing on history         | Expected on Cloud — crops use ephemeral disk; re-run analysis in same session |
 

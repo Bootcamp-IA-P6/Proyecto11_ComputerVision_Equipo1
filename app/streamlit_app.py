@@ -16,7 +16,6 @@ from src.config import get_settings
 from src.crops import resolve_crop_path
 from src.db.connection import check_connection, get_db_session
 from src.db import repository
-from src.pipeline import analyze_video
 
 st.set_page_config(page_title="BrandSight", page_icon="🥤", layout="wide")
 
@@ -27,6 +26,16 @@ settings = get_settings()
 settings.ensure_dirs()
 
 _is_cloud = os.environ.get("STREAMLIT_RUNTIME_ENVIRONMENT") == "cloud"
+
+
+def _opencv_packages() -> list[str]:
+    import importlib.metadata
+
+    return sorted(
+        dist.metadata["Name"]
+        for dist in importlib.metadata.distributions()
+        if "opencv" in dist.metadata["Name"].lower()
+    )
 
 
 def _safe_error(exc: Exception) -> str:
@@ -43,6 +52,15 @@ with st.sidebar:
     st.header("Status / Estado")
     if _is_cloud:
         st.info("Streamlit Cloud")
+        opencv_pkgs = _opencv_packages()
+        if "opencv-python" in opencv_pkgs:
+            st.error(
+                "Stale OpenCV detected (`opencv-python`). "
+                "Manage app → Reboot app (not Rerun). "
+                "If it persists, set Python to 3.12 in app settings and redeploy."
+            )
+        elif opencv_pkgs:
+            st.caption(f"OpenCV: {', '.join(opencv_pkgs)}")
     try:
         check_connection()
         st.success("Supabase connected / Conectado")
@@ -90,6 +108,8 @@ with tab_upload:
         else:
             with st.spinner("Analyzing video... / Analizando vídeo..."):
                 try:
+                    from src.pipeline import analyze_video
+
                     video_id = analyze_video(video_path)
                     st.session_state["last_video_id"] = video_id
                     st.success(f"Analysis complete / Análisis completo — video_id={video_id}")

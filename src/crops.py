@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import cv2
-
 from src.config import get_settings
 
 
@@ -29,6 +27,8 @@ def save_detection_crops(
     """
     if not detections:
         return []
+
+    import cv2
 
     settings = get_settings()
     crop_dir = crop_dir_for_video(video_id)
