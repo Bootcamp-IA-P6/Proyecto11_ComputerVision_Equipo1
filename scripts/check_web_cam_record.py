@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 # 1. Carga tu modelo entrenado
-ruta_modelo = "ruta/a/tu/modelo_entrenado.pt"
+ruta_modelo = "../models/best.pt"
 model = YOLO(ruta_modelo)
 
 # 2. Inicia la cámara web
@@ -35,7 +35,8 @@ while True:
         break
 
     # Ejecutamos YOLO (aquí puedes ajustar el umbral 'conf')
-    results = model(frame, conf=0.5)[0]  # Añadimos [0] para asegurar el acceso al primer resultado
+    #results = model(frame, conf=0.5)[0]  # Añadimos [0] para asegurar el acceso al primer resultado
+    results = model(frame, conf=0.5)
 
     # Dibujamos las cajas de detección
     # El parámetro 'render()' u 'output' en YOLOv8 se obtiene con .plot()
