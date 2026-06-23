@@ -28,7 +28,7 @@ Related: [PROJECT_PLAN.md](./PROJECT_PLAN.md) · [PLAN_PROYECTO.md](./PLAN_PROYE
 
 | To Do | In Progress | In Review | Done |
 |-------|-------------|-----------|------|
-| 10 | 2 | 0 | 4 |
+| 9 | 1 | 0 | 5 |
 
 _Sync with GitHub Project columns. / Sincronizar con columnas del Project._
 
@@ -255,17 +255,24 @@ python -m src.detect_video --video path/to.mp4 --no-db
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#9](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/9) · **Open** |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Sprint day** | Day 4 |
 | **Assignee** | KangMirae (**B**) |
 | **Support** | C |
 | **Labels** | `metrics`, `backend`, `advanced`, `day-4` |
 
+**CLI**
+```bash
+python -m src.detect_video --video data/demo/demo1.mp4   # detections + metrics → DB
+python -m src.metrics_export --video-id <id> --export
+```
+
 **Acceptance criteria / Criterios de aceptación**
-- [ ] Coca-Cola and Pepsi seconds + % calculated correctly
-- [ ] Dominant brand and gap stored in DB
-- [ ] Metrics match manual spot-check on demo video
-- [ ] Frame sampling documented in README
+- [x] Coca-Cola and Pepsi seconds + % calculated correctly
+- [x] Dominant brand and gap stored in DB (`brand_summary`, `competitive_analysis`)
+- [x] JSON/text summary exported to `data/outputs/metrics_{id}.*`
+- [x] Frame sampling documented in README + `src/metrics.py` module docstring
+- [ ] Metrics match manual spot-check on demo video — _run on `demo1.mp4`_
 
 ---
 

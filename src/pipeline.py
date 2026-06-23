@@ -6,13 +6,8 @@ from src.config import get_settings
 from src.db.connection import get_db_session
 from src.db import repository
 from src.detect_video import detect_video
-from src.metrics import (
-    brand_metrics_to_dict,
-    build_metrics_payload,
-    competitive_result_to_dict,
-    compute_brand_metrics,
-    compute_competitive_analysis,
-)
+from src.metrics import persist_visibility_analysis
+from src.metrics_export import export_metrics_files
 from src.report.generate_marketing_report import PROMPT_VERSION, generate_marketing_report, save_report_to_file
 
 
@@ -82,22 +77,17 @@ def analyze_video(video_path: Path, *, weights_path: Path | None = None) -> int:
         if enriched:
             repository.bulk_insert_detections(session, enriched)
 
-        brand_metrics = compute_brand_metrics(
+        payload = persist_visibility_analysis(
+            session,
+            video_id,
             enriched,
             duration_sec=duration_sec,
             fps=fps,
             sample_stride=settings.sample_stride,
+            video_filename=video_path.name,
         )
-        competitive = compute_competitive_analysis(brand_metrics, duration_sec=duration_sec)
+        export_metrics_files(payload, video_id)
 
-        repository.save_brand_summaries(
-            session,
-            video_id,
-            [brand_metrics_to_dict(item) for item in brand_metrics],
-        )
-        repository.save_competitive_analysis(session, video_id, competitive_result_to_dict(competitive))
-
-        payload = build_metrics_payload(video_path.name, duration_sec, brand_metrics, competitive)
         report_text, model_name = generate_marketing_report(payload)
         report_path = save_report_to_file(video_id, report_text)
         repository.save_marketing_report(

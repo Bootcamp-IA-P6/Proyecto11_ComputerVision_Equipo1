@@ -141,10 +141,20 @@ def persist_video_detections(
     duration_sec: float,
     fps: float,
     total_frames: int,
-) -> int:
-    """Insert video row and detection rows into Supabase. Returns ``videos.id``."""
+    sample_stride: int | None = None,
+) -> tuple[int, dict | None]:
+    """Insert video, detections, and visibility metrics into Supabase.
+
+    Returns ``(video_id, metrics_payload)``.
+    """
     from src.db.connection import get_db_session
     from src.db import repository
+    from src.metrics import persist_visibility_analysis
+    from src.metrics_export import export_metrics_files
+
+    settings = get_settings()
+    stride = sample_stride or settings.sample_stride
+    metrics_payload: dict | None = None
 
     with get_db_session() as session:
         video = repository.create_video(
@@ -160,13 +170,27 @@ def persist_video_detections(
         rows = [{**det, "video_id": video_id} for det in detections]
         if rows:
             repository.bulk_insert_detections(session, rows)
+
+        metrics_payload = persist_visibility_analysis(
+            session,
+            video_id,
+            detections,
+            duration_sec=duration_sec,
+            fps=fps,
+            sample_stride=stride,
+            video_filename=video_path.name,
+        )
         repository.update_video_status(
             session,
             video_id,
             status="done",
             annotated_path=annotated_path,
         )
-    return video_id
+
+    if metrics_payload is not None:
+        export_metrics_files(metrics_payload, video_id)
+
+    return video_id, metrics_payload
 
 
 def main() -> None:
@@ -190,8 +214,9 @@ def main() -> None:
             f"Model weights not found at {weights}. Train in Colab (#5) and place best.pt in models/."
         )
 
+    stride = args.stride or settings.sample_stride
     out, detections, duration, fps, frames = detect_video(
-        args.video, weights, output_path=args.output, sample_stride=args.stride
+        args.video, weights, output_path=args.output, sample_stride=stride
     )
     print(f"Saved annotated video to {out}")
     print(f"Duration: {duration:.2f}s | FPS: {fps:.2f} | Detections: {len(detections)} | Frames: {frames}")
@@ -203,15 +228,21 @@ def main() -> None:
         print("DATABASE_URL not set — skipping Supabase persist (use .env or pass --no-db).")
         return
 
-    video_id = persist_video_detections(
+    video_id, metrics_payload = persist_video_detections(
         args.video,
         out,
         detections,
         duration_sec=duration,
         fps=fps,
         total_frames=frames,
+        sample_stride=stride,
     )
     print(f"Supabase: videos.id={video_id} | {len(detections)} rows in detections")
+    if metrics_payload:
+        from src.metrics_export import format_metrics_text
+
+        print("\n" + format_metrics_text(metrics_payload))
+        print(f"\nMetrics files: data/outputs/metrics_{video_id}.json")
 
 
 if __name__ == "__main__":
