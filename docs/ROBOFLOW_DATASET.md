@@ -31,25 +31,29 @@ h) **Image counts per brand (source, annotated):**
 
 | Brand | Count |
 |-------|-------|
-| Coca-Cola | __________ |
-| Pepsi | __________ |
+| Coca-Cola | 658 |
+| Pepsi | 637 |
 
 i) **Export image counts (from YOLO download):**
 
 | Split | Count |
 |-------|-------|
-| Train | 1119 |
-| Val | 105 |
-| Total | 1224 |
+| Train | 1131 |
+| Val | 109 |
+| Test | 55 |
+| Total | 1295 |
 
-j) **Train/validation split:** __________ (e.g. ratio or Roboflow preset name)
+j) **Train/validation/test split:** 87% / 8% / 4% (e.g. ratio or Roboflow preset name)
 
 k) **Roboflow augmentations (preprocessing on export version):**
 
-| Flip | __________ |
-| Brightness | __________ |
-| Crop | __________ |
-| Other | __________ |
+| Parameter | Value |
+|-----------|-------|
+| Flip | Horizontal, Vertical |
+| 90º Rotate | Clockwise, Counter-Clockwise |
+| Rotation | Between -15º and + 15º |
+| Shear | +- 15º Horizontal, +- 15º Vertical |
+| Exposure | Between -25% and +25% |
 
 l) **YOLO training augmentations** (if Roboflow aug not used; see notebook):
 
@@ -63,7 +67,7 @@ l) **YOLO training augmentations** (if Roboflow aug not used; see notebook):
 
 m) **Team Drive dataset zip link:** __________
 
-n) **Team Drive path / filename:** __________
+n) **Team Drive path / filename:** https://colab.research.google.com/drive/15kOo4QtKVSF_0RNVzThyNWtfbL4Ng89q
 
 o) **API key env var:** `ROBOFLOW_API_KEY` (see [`.env.example`](../.env.example); not committed)
 
