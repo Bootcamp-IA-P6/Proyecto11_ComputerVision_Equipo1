@@ -28,7 +28,7 @@ Related: [PROJECT_PLAN.md](./PROJECT_PLAN.md) · [PLAN_PROYECTO.md](./PLAN_PROYE
 
 | To Do | In Progress | In Review | Done |
 |-------|-------------|-----------|------|
-| 8 | 1 | 2 | 5 |
+| 7 | 1 | 3 | 5 |
 
 _Sync with GitHub Project columns. / Sincronizar con columnas del Project._
 
@@ -338,17 +338,19 @@ python -m src.metrics_export --video-id <id> --export
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#13](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/13) · **Open** |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Sprint day** | Day 5 |
 | **Assignee** | KangMirae (**B**) |
 | **Support** | A |
 | **Labels** | `deploy`, `expert`, `day-5` |
 
 **Acceptance criteria / Criterios de aceptación**
-- [ ] Public URL accessible
-- [ ] Deployed app connects to Supabase
-- [ ] Full demo works on live URL (not just local)
-- [ ] Secrets not exposed in repo or logs
+- [ ] Public URL accessible — _deploy via [docs/DEPLOY.md](./DEPLOY.md)_
+- [x] Deploy config: `.streamlit/config.toml`, `packages.txt`, `runtime.txt`, secrets bootstrap
+- [x] `scripts/smoke_deploy.py` pre-flight check (no secrets logged)
+- [ ] Deployed app connects to Supabase — _verify on live URL_
+- [ ] Full demo works on live URL (upload → metrics → report) — _use 30–60 s MP4_
+- [x] Secrets not exposed in repo or logs (`.streamlit/secrets.toml` gitignored, UI redaction)
 
 ---
 

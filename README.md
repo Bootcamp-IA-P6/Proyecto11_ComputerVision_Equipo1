@@ -114,12 +114,20 @@ docker build -t brandsight .
 docker run -p 8501:8501 --env-file .env brandsight
 ```
 
-## Deploy (Streamlit Cloud)
+## Deploy (Streamlit Cloud) — #13
 
-1. Push repo to GitHub
+**Runbook:** **[docs/DEPLOY.md](docs/DEPLOY.md)**
+
+```bash
+python -m scripts.smoke_deploy   # pre-flight before deploy
+```
+
+1. Push repo to GitHub (`models/best.pt` must be on the branch)
 2. [share.streamlit.io](https://share.streamlit.io) → New app → `app/streamlit_app.py`
-3. Add secrets: `DATABASE_URL`, `GEMINI_API_KEY`, `MODEL_PATH=models/best.pt`
-4. Include `best.pt` in repo or download at startup (document your approach)
+3. Paste secrets (see `.streamlit/secrets.toml.example`) — `DATABASE_URL`, `GEMINI_API_KEY`, etc.
+4. Deploy → verify sidebar **Supabase connected** → upload a short MP4 and run analysis
+
+**Live demo:** _add URL after deploy, e.g. `https://brandsight-equipo1.streamlit.app`_
 
 ## Team docs
 
@@ -127,6 +135,7 @@ docker run -p 8501:8501 --env-file .env brandsight
 - [Plan (ES)](docs/PLAN_PROYECTO.md)
 - [Kanban](docs/KANBAN.md)
 - [Supabase setup](docs/SUPABASE_SETUP.md)
+- [Cloud deploy (#13)](docs/DEPLOY.md)
 - [Roboflow dataset](docs/ROBOFLOW_DATASET.md)
 - [Briefing](docs/BRIEFING_README.md)
 
