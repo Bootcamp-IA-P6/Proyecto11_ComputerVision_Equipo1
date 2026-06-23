@@ -5,7 +5,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .mypy_cache/
-models/*.pt
 data/crops/
 data/demo/*.mp4
 data/uploads/
