@@ -23,10 +23,18 @@ class Video(Base):
     status: Mapped[str] = mapped_column(String(20), default="pending")
     processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    detections: Mapped[list["Detection"]] = relationship(back_populates="video")
-    brand_summaries: Mapped[list["BrandSummary"]] = relationship(back_populates="video")
-    competitive_analysis: Mapped["CompetitiveAnalysis | None"] = relationship(back_populates="video")
-    marketing_reports: Mapped[list["MarketingReport"]] = relationship(back_populates="video")
+    detections: Mapped[list["Detection"]] = relationship(
+        back_populates="video", cascade="all, delete-orphan"
+    )
+    brand_summaries: Mapped[list["BrandSummary"]] = relationship(
+        back_populates="video", cascade="all, delete-orphan"
+    )
+    competitive_analysis: Mapped["CompetitiveAnalysis | None"] = relationship(
+        back_populates="video", cascade="all, delete-orphan", uselist=False
+    )
+    marketing_reports: Mapped[list["MarketingReport"]] = relationship(
+        back_populates="video", cascade="all, delete-orphan"
+    )
 
 
 class Detection(Base):

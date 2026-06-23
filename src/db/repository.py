@@ -61,8 +61,8 @@ def update_video_status(
 
 
 def bulk_insert_detections(session: Session, rows: list[dict]) -> None:
-    """Bulk-insert detection dicts into ``detections`` (keys must match column names)."""
-    session.bulk_insert_mappings(Detection, rows)
+    """Insert detection dicts into ``detections`` (keys must match column names)."""
+    session.add_all([Detection(**row) for row in rows])
 
 
 def save_brand_summaries(session: Session, video_id: int, summaries: list[dict]) -> None:

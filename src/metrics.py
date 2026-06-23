@@ -1,7 +1,24 @@
-from dataclasses import dataclass
-from pathlib import Path
+"""Visibility metrics and competitive analysis (#9).
 
-from src.config import BRAND_COCA_COLA, BRAND_PEPSI, get_settings
+Frame sampling
+--------------
+Inference runs every ``SAMPLE_STRIDE`` frames (default 3, env ``SAMPLE_STRIDE``).
+For each brand, we count **unique frame numbers** with at least one detection
+(confidence ≥ ``CONFIDENCE_THRESHOLD`` at inference time).
+
+::
+
+    frame_interval = sample_stride / fps
+    visible_seconds = len(unique_frames) * frame_interval
+    visibility_pct  = (visible_seconds / duration_sec) * 100
+
+``balance_label`` is ``balanced`` when the visibility gap is under 5% of video
+duration; otherwise ``coca_cola_dominant`` or ``pepsi_dominant``.
+"""
+
+from dataclasses import dataclass
+
+from src.config import BRAND_COCA_COLA, BRAND_PEPSI
 
 
 @dataclass
@@ -118,7 +135,12 @@ def competitive_result_to_dict(result: CompetitiveResult) -> dict:
     }
 
 
-def build_metrics_payload(video_filename: str, duration_sec: float, brand_metrics: list[BrandMetrics], competitive: CompetitiveResult) -> dict:
+def build_metrics_payload(
+    video_filename: str,
+    duration_sec: float,
+    brand_metrics: list[BrandMetrics],
+    competitive: CompetitiveResult,
+) -> dict:
     by_brand = {item.brand: brand_metrics_to_dict(item) for item in brand_metrics}
     empty = {
         "visible_seconds": 0.0,
@@ -137,3 +159,53 @@ def build_metrics_payload(video_filename: str, duration_sec: float, brand_metric
         "visibility_gap_sec": competitive.visibility_gap_sec,
         "balance_label": competitive.balance_label,
     }
+
+
+def compute_visibility_analysis(
+    detections: list[dict],
+    *,
+    duration_sec: float,
+    fps: float,
+    sample_stride: int,
+) -> tuple[list[BrandMetrics], CompetitiveResult]:
+    """Compute per-brand metrics and competitive summary from detection rows."""
+    brand_metrics = compute_brand_metrics(
+        detections,
+        duration_sec=duration_sec,
+        fps=fps,
+        sample_stride=sample_stride,
+    )
+    competitive = compute_competitive_analysis(brand_metrics, duration_sec=duration_sec)
+    return brand_metrics, competitive
+
+
+def persist_visibility_analysis(
+    session,
+    video_id: int,
+    detections: list[dict],
+    *,
+    duration_sec: float,
+    fps: float,
+    sample_stride: int,
+    video_filename: str,
+) -> dict:
+    """Write ``brand_summary`` + ``competitive_analysis`` and return JSON payload."""
+    from src.db import repository
+
+    brand_metrics, competitive = compute_visibility_analysis(
+        detections,
+        duration_sec=duration_sec,
+        fps=fps,
+        sample_stride=sample_stride,
+    )
+    repository.save_brand_summaries(
+        session,
+        video_id,
+        [brand_metrics_to_dict(item) for item in brand_metrics],
+    )
+    repository.save_competitive_analysis(
+        session,
+        video_id,
+        competitive_result_to_dict(competitive),
+    )
+    return build_metrics_payload(video_filename, duration_sec, brand_metrics, competitive)

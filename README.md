@@ -48,6 +48,8 @@ src/
   detect_image.py     Single-image inference CLI
   detect_video.py     Video inference CLI
   metrics.py          Visibility calculations
+  metrics_export.py   Metrics JSON/text export CLI (#9)
+  crops.py            Bbox crop extraction + crop_path (#10)
   pipeline.py         End-to-end analysis orchestrator
   report/             AI marketing report generator
 data/
@@ -67,11 +69,42 @@ docs/                 Project plans + Kanban
 # Image detection
 python -m src.detect_image --image path/to/image.jpg
 
-# Video detection
+# Video detection (persists to Supabase when DATABASE_URL is set)
 python -m src.detect_video --video data/demo/sample.mp4
 
-# Full pipeline (video → DB → report)
-python -c "from src.pipeline import analyze_video; analyze_video(__import__('pathlib').Path('data/demo/sample.mp4'))"
+# Skip database write
+python -m src.detect_video --video data/demo/sample.mp4 --no-db
+
+# Visibility metrics for a processed video (reads from Supabase)
+python -m src.metrics_export --video-id 1
+python -m src.metrics_export --video-id 1 --export
+
+# Verify bbox crops on disk match detections.crop_path (#10)
+python -m scripts.verify_crops --video-id 1
+
+# Full pipeline (video → DB → metrics → report)
+python -c "from pathlib import Path; from src.pipeline import analyze_video; print(analyze_video(Path('data/demo/sample.mp4')))"
+```
+
+## Visibility metrics (#9)
+
+Detection runs every **`SAMPLE_STRIDE`** frames (default `3`, set in `.env`).
+Per-brand **visible seconds** = unique sampled frames with a detection × `(stride / fps)`.
+**Visibility %** = `visible_seconds / video_duration × 100`.
+**Balance label:** `balanced` if gap &lt; 5% of duration; else `coca_cola_dominant` or `pepsi_dominant`.
+
+`detect_video` writes `brand_summary` and `competitive_analysis` when persisting to Supabase.
+Exported files: `data/outputs/metrics_{video_id}.json` and `.txt`.
+
+## Bbox crops (#10)
+
+Each detection bbox is cropped from the source video and saved under `data/crops/{video_id}/`.
+The absolute path is stored in `detections.crop_path` when persisting via `detect_video` or `pipeline`.
+Streamlit shows up to 12 crop thumbnails after analysis. Optional Supabase Storage: `sql/storage.sql`.
+
+```bash
+python -m src.detect_video --video data/demo/demo1.mp4
+python -m scripts.verify_crops --video-id <id>
 ```
 
 ## Docker
@@ -81,12 +114,20 @@ docker build -t brandsight .
 docker run -p 8501:8501 --env-file .env brandsight
 ```
 
-## Deploy (Streamlit Cloud)
+## Deploy (Streamlit Cloud) — #13
 
-1. Push repo to GitHub
+**Runbook:** **[docs/DEPLOY.md](docs/DEPLOY.md)**
+
+```bash
+python -m scripts.smoke_deploy   # pre-flight before deploy
+```
+
+1. Push repo to GitHub (`models/best.pt` must be on the branch)
 2. [share.streamlit.io](https://share.streamlit.io) → New app → `app/streamlit_app.py`
-3. Add secrets: `DATABASE_URL`, `GEMINI_API_KEY`, `MODEL_PATH=models/best.pt`
-4. Include `best.pt` in repo or download at startup (document your approach)
+3. Paste secrets (see `.streamlit/secrets.toml.example`) — `DATABASE_URL`, `GEMINI_API_KEY`, etc.
+4. Deploy → verify sidebar **Supabase connected** → upload a short MP4 and run analysis
+
+**Live demo:** _add URL after deploy, e.g. `https://brandsight-equipo1.streamlit.app`_
 
 ## Team docs
 
@@ -94,6 +135,8 @@ docker run -p 8501:8501 --env-file .env brandsight
 - [Plan (ES)](docs/PLAN_PROYECTO.md)
 - [Kanban](docs/KANBAN.md)
 - [Supabase setup](docs/SUPABASE_SETUP.md)
+- [Cloud deploy (#13)](docs/DEPLOY.md)
+- [Roboflow dataset](docs/ROBOFLOW_DATASET.md)
 - [Briefing](docs/BRIEFING_README.md)
 
 ## Brands (YOLO classes)

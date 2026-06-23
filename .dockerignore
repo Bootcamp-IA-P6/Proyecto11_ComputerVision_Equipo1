@@ -1,0 +1,13 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.git/
+data/crops/
+data/uploads/
+data/outputs/
+data/demo/*.mp4
+data/demo/*.m4a
+.streamlit/secrets.toml
+.DS_Store
