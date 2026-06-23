@@ -67,8 +67,11 @@ docs/                 Project plans + Kanban
 # Image detection
 python -m src.detect_image --image path/to/image.jpg
 
-# Video detection
+# Video detection (persists to Supabase when DATABASE_URL is set)
 python -m src.detect_video --video data/demo/sample.mp4
+
+# Skip database write
+python -m src.detect_video --video data/demo/sample.mp4 --no-db
 
 # Full pipeline (video → DB → report)
 python -c "from src.pipeline import analyze_video; analyze_video(__import__('pathlib').Path('data/demo/sample.mp4'))"
