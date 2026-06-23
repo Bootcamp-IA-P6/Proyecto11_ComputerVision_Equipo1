@@ -77,9 +77,9 @@ Ambas marcas estuvieron prácticamente equilibradas. Coca-Cola: {{ coca_cola.vis
 {% if balance_label == "coca_cola_dominant" %}
 Reforzar las ubicaciones ganadoras. La estrategia actual de Coca-Cola está dando resultados — proteger y expandir.
 {% elif balance_label == "pepsi_dominant" %}
-Aumentar la visibilidad de marca Coca-Cola en este segmento de contenido durante el próximo trimestre. Objetivo: mejorar mínimo 10 puntos porcentuales.
+Aumentar la visibilidad de marca Coca-Cola en este segmento de contenido, priorizando los momentos donde Pepsi lidera según las métricas anteriores.
 {% else %}
-Invertir en ubicación diferenciada para crear una ventaja clara de Coca-Cola. Incluso una ventaja de 5 puntos porcentuales cambiaría la percepción.
+Invertir en ubicación diferenciada para crear una ventaja clara de Coca-Cola frente al equilibrio actual entre ambas marcas.
 {% endif %}
 
 ---
@@ -122,11 +122,11 @@ Redacta un informe de marketing conciso con estas secciones:
 
 Usa perspectiva del cliente Coca-Cola. Tono profesional. NO inventes cifras. El informe debe estar en español."""
 
-    modelo = genai.GenerativeModel(MODEL_NAME)
+    modelo = genai.GenerativeModel(MODEL_NAME, system_instruction=SYSTEM_PROMPT)
     respuesta = modelo.generate_content(
         contents=[prompt],
         generation_config={
-            "temperature": 0.7,
+            "temperature": 0.3,
             "max_output_tokens": 800,
         },
     )
