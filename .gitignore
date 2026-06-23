@@ -7,6 +7,8 @@ __pycache__/
 .mypy_cache/
 data/crops/
 data/demo/*.mp4
+data/demo/*.jpg
+runs/
 data/uploads/
 .DS_Store
 *.egg-info/
