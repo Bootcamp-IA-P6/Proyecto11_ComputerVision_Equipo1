@@ -13,3 +13,4 @@ data/uploads/
 *.egg-info/
 dist/
 build/
+data/demo/*.mp4

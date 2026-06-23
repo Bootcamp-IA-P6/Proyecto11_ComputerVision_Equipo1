@@ -1,18 +1,22 @@
 # Demo videos — BrandSight
 
-Videos are stored in Team Drive, not in Git (see .gitignore).
+Videos are stored in Team Drive and local `data/demo/` — not in Git (see .gitignore).
 
 ## Sources
 
 | File | URL | Duration | Notes |
 |------|-----|----------|-------|
-| demo1.mp4 | https://www.youtube.com/watch?v=xrtPYk8z2CA | 60s | Coca-Cola + Pepsi |
-| demo2.mp4 | https://www.youtube.com/watch?v=oWOG6PTs75s | 60s | Coca-Cola + Pepsi |
-| demo3.mp4 | https://www.youtube.com/watch?v=ekaHlWga5yA | 60s | Coca-Cola + Pepsi |
-| demo4.mp4 | https://www.youtube.com/watch?v=_sugeMMyKPY | 60s | Coca-Cola + Pepsi |
+| demo1.mp4 | https://www.youtube.com/watch?v=gI0mj2zATLA | 45s | Coca-Cola + Pepsi |
+| demo2.mp4 | https://www.youtube.com/watch?v=oWOG6PTs75s | 29s | Coca-Cola + Pepsi |
+| demo3.mp4 | https://www.youtube.com/watch?v=ekaHlWga5yA | 36s | Coca-Cola + Pepsi |
+| demo4.mp4 | https://www.youtube.com/watch?v=_sugeMMyKPY | 62s | Coca-Cola + Pepsi |
 
-## Setup
+## Quick setup — run the download script
 
-1. Download videos with yt-dlp (see README)
-2. Place in `data/demo/`
-3. Or copy from Team Drive: `Team Drive/demo_videos/`
+```bash
+python scripts/download_demo_videos.py
+```
+
+This downloads all 4 videos automatically using yt-dlp.
+Manual alternative: copy from `Team Drive/demo_videos/`.
+
