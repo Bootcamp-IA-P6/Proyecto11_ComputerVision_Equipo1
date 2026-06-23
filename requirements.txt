@@ -7,9 +7,8 @@ pydantic-settings>=2.0.0
 sqlalchemy>=2.0.0
 psycopg2-binary>=2.9.9
 
-# Computer vision
-ultralytics>=8.3.0
-opencv-python-headless>=4.9.0
+# Computer vision (headless — required for Streamlit Cloud; do not use plain ultralytics)
+ultralytics-opencv-headless>=8.3.0
 pillow>=10.0.0
 numpy>=1.26.0
 
