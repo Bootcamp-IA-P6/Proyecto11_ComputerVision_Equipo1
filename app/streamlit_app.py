@@ -8,6 +8,7 @@ if str(ROOT) not in sys.path:
 import streamlit as st
 
 from src.config import BRAND_COCA_COLA, BRAND_PEPSI, get_settings
+from src.crops import resolve_crop_path
 from src.db.connection import check_connection, get_db_session
 from src.db import repository
 from src.pipeline import analyze_video
@@ -77,6 +78,7 @@ with tab_upload:
             summaries = repository.get_brand_summaries(session, video_id)
             competitive = repository.get_competitive_analysis(session, video_id)
             report = repository.get_latest_marketing_report(session, video_id)
+            detections = repository.get_detections(session, video_id, limit=12)
 
         if video:
             st.subheader("Results / Resultados")
@@ -106,6 +108,21 @@ with tab_upload:
 
             if video.annotated_path and Path(video.annotated_path).exists():
                 st.video(video.annotated_path)
+
+            crop_samples = [
+                (det, resolve_crop_path(det.crop_path))
+                for det in detections
+                if resolve_crop_path(det.crop_path) is not None
+            ]
+            if crop_samples:
+                st.subheader("Detection crops / Recortes de detección")
+                cols = st.columns(min(len(crop_samples), 4))
+                for idx, (det, crop_path) in enumerate(crop_samples):
+                    cols[idx % len(cols)].image(
+                        str(crop_path),
+                        caption=f"{det.brand} · {det.confidence:.0%} · f{det.frame_number}",
+                        use_container_width=True,
+                    )
 
             if report:
                 st.subheader("AI Marketing Report / Informe de marketing IA")

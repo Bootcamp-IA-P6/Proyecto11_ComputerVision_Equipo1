@@ -49,6 +49,7 @@ src/
   detect_video.py     Video inference CLI
   metrics.py          Visibility calculations
   metrics_export.py   Metrics JSON/text export CLI (#9)
+  crops.py            Bbox crop extraction + crop_path (#10)
   pipeline.py         End-to-end analysis orchestrator
   report/             AI marketing report generator
 data/
@@ -78,6 +79,9 @@ python -m src.detect_video --video data/demo/sample.mp4 --no-db
 python -m src.metrics_export --video-id 1
 python -m src.metrics_export --video-id 1 --export
 
+# Verify bbox crops on disk match detections.crop_path (#10)
+python -m scripts.verify_crops --video-id 1
+
 # Full pipeline (video → DB → metrics → report)
 python -c "from pathlib import Path; from src.pipeline import analyze_video; print(analyze_video(Path('data/demo/sample.mp4')))"
 ```
@@ -91,6 +95,17 @@ Per-brand **visible seconds** = unique sampled frames with a detection × `(stri
 
 `detect_video` writes `brand_summary` and `competitive_analysis` when persisting to Supabase.
 Exported files: `data/outputs/metrics_{video_id}.json` and `.txt`.
+
+## Bbox crops (#10)
+
+Each detection bbox is cropped from the source video and saved under `data/crops/{video_id}/`.
+The absolute path is stored in `detections.crop_path` when persisting via `detect_video` or `pipeline`.
+Streamlit shows up to 12 crop thumbnails after analysis. Optional Supabase Storage: `sql/storage.sql`.
+
+```bash
+python -m src.detect_video --video data/demo/demo1.mp4
+python -m scripts.verify_crops --video-id <id>
+```
 
 ## Docker
 

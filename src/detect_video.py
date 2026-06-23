@@ -142,11 +142,12 @@ def persist_video_detections(
     fps: float,
     total_frames: int,
     sample_stride: int | None = None,
-) -> tuple[int, dict | None]:
+) -> tuple[int, dict | None, int]:
     """Insert video, detections, and visibility metrics into Supabase.
 
-    Returns ``(video_id, metrics_payload)``.
+    Returns ``(video_id, metrics_payload, crops_saved)``.
     """
+    from src.crops import count_saved_crops, save_detection_crops
     from src.db.connection import get_db_session
     from src.db import repository
     from src.metrics import persist_visibility_analysis
@@ -167,9 +168,10 @@ def persist_video_detections(
             status="processing",
         )
         video_id = video.id
-        rows = [{**det, "video_id": video_id} for det in detections]
-        if rows:
-            repository.bulk_insert_detections(session, rows)
+        enriched = save_detection_crops(video_path, video_id, detections)
+        crops_saved = count_saved_crops(enriched)
+        if enriched:
+            repository.bulk_insert_detections(session, enriched)
 
         metrics_payload = persist_visibility_analysis(
             session,
@@ -190,7 +192,7 @@ def persist_video_detections(
     if metrics_payload is not None:
         export_metrics_files(metrics_payload, video_id)
 
-    return video_id, metrics_payload
+    return video_id, metrics_payload, crops_saved
 
 
 def main() -> None:
@@ -228,7 +230,7 @@ def main() -> None:
         print("DATABASE_URL not set — skipping Supabase persist (use .env or pass --no-db).")
         return
 
-    video_id, metrics_payload = persist_video_detections(
+    video_id, metrics_payload, crops_saved = persist_video_detections(
         args.video,
         out,
         detections,
@@ -237,7 +239,7 @@ def main() -> None:
         total_frames=frames,
         sample_stride=stride,
     )
-    print(f"Supabase: videos.id={video_id} | {len(detections)} rows in detections")
+    print(f"Supabase: videos.id={video_id} | {len(detections)} rows in detections | {crops_saved} crops on disk")
     if metrics_payload:
         from src.metrics_export import format_metrics_text
 

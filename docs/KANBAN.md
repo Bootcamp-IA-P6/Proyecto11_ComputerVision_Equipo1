@@ -28,7 +28,7 @@ Related: [PROJECT_PLAN.md](./PROJECT_PLAN.md) · [PLAN_PROYECTO.md](./PLAN_PROYE
 
 | To Do | In Progress | In Review | Done |
 |-------|-------------|-----------|------|
-| 9 | 1 | 0 | 5 |
+| 8 | 1 | 2 | 5 |
 
 _Sync with GitHub Project columns. / Sincronizar con columnas del Project._
 
@@ -281,17 +281,17 @@ python -m src.metrics_export --video-id <id> --export
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#10](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/10) · **Open** |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Sprint day** | Day 4 |
 | **Assignee** | KangMirae (**B**) |
 | **Support** | C |
 | **Labels** | `database`, `advanced`, `day-4` |
 
 **Acceptance criteria / Criterios de aceptación**
-- [ ] Crop images saved for sample detections
-- [ ] `crop_path` populated in Supabase
-- [ ] Crops viewable from path/URL
-- [ ] **Advanced DB requirement met**
+- [x] Crop images saved for sample detections (`src/crops.py` → `data/crops/{video_id}/`)
+- [x] `crop_path` populated in Supabase (`detect_video` + `pipeline`)
+- [x] Crops viewable from path/URL (Streamlit thumbnails + `scripts/verify_crops.py`)
+- [x] **Advanced DB requirement met**
 
 ---
 

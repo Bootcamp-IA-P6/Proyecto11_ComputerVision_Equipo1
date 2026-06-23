@@ -1,7 +1,6 @@
 from pathlib import Path
 
-import cv2
-
+from src.crops import save_detection_crops
 from src.config import get_settings
 from src.db.connection import get_db_session
 from src.db import repository
@@ -9,44 +8,6 @@ from src.detect_video import detect_video
 from src.metrics import persist_visibility_analysis
 from src.metrics_export import export_metrics_files
 from src.report.generate_marketing_report import PROMPT_VERSION, generate_marketing_report, save_report_to_file
-
-
-def _save_crops(video_path: Path, video_id: int, detections: list[dict]) -> list[dict]:
-    settings = get_settings()
-    crop_dir = settings.crops_dir / str(video_id)
-    crop_dir.mkdir(parents=True, exist_ok=True)
-
-    cap = cv2.VideoCapture(str(video_path))
-    if not cap.isOpened():
-        return detections
-
-    frames_cache: dict[int, object] = {}
-    enriched: list[dict] = []
-
-    for idx, det in enumerate(detections):
-        frame_number = det["frame_number"]
-        if frame_number not in frames_cache:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
-            ok, frame = cap.read()
-            frames_cache[frame_number] = frame if ok else None
-
-        frame = frames_cache[frame_number]
-        crop_path = None
-        if frame is not None:
-            x, y, w, h = int(det["bbox_x"]), int(det["bbox_y"]), int(det["bbox_w"]), int(det["bbox_h"])
-            h_img, w_img = frame.shape[:2]
-            x2, y2 = min(x + w, w_img), min(y + h, h_img)
-            x, y = max(x, 0), max(y, 0)
-            if x2 > x and y2 > y:
-                crop = frame[y:y2, x:x2]
-                crop_file = crop_dir / f"{det['brand']}_{idx}.jpg"
-                cv2.imwrite(str(crop_file), crop)
-                crop_path = str(crop_file)
-
-        enriched.append({**det, "crop_path": crop_path, "video_id": video_id})
-
-    cap.release()
-    return enriched
 
 
 def analyze_video(video_path: Path, *, weights_path: Path | None = None) -> int:
@@ -73,7 +34,7 @@ def analyze_video(video_path: Path, *, weights_path: Path | None = None) -> int:
         )
         video_id = video.id
 
-        enriched = _save_crops(video_path, video_id, detections)
+        enriched = save_detection_crops(video_path, video_id, detections)
         if enriched:
             repository.bulk_insert_detections(session, enriched)
 
