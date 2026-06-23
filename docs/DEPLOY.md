@@ -36,7 +36,7 @@ Repo files used automatically:
 | File                     | Purpose                              |
 | ------------------------ | ------------------------------------ |
 | `requirements.txt`       | Python dependencies                  |
-| `packages.txt`           | System libs for OpenCV (`libgl1`)    |
+| `packages.txt`           | System libs for OpenCV (`libgl1`, `libglib2.0-0`) |
 | `runtime.txt`            | Python 3.11                          |
 | `.streamlit/config.toml` | Headless server, 200 MB upload limit |
 
@@ -85,6 +85,7 @@ SAMPLE_STRIDE = "3"
 | `password authentication failed` | Use **Session pooler** URI; user must be `postgres.[project-ref]`             |
 | `Model not found`                | Ensure `models/best.pt` is on the deployed branch                             |
 | OpenCV / libGL error             | `packages.txt` must include `libgl1`                                          |
+| `libgthread-2.0.so.0` missing    | Add `libglib2.0-0` to `packages.txt`; reboot app after push                   |
 | Analysis timeout                 | Use shorter video or increase `SAMPLE_STRIDE` in secrets                      |
 | Crops missing on history         | Expected on Cloud — crops use ephemeral disk; re-run analysis in same session |
 
