@@ -441,6 +441,6 @@ python scripts/smoke_deploy.py && python -m scripts.test_db_insert
 
 ---
 
-*Desarrollado como proyecto educativo para el bootcamp de desarrollo AI de [Factoría F5](https://factoriaf5.org) · 2025*
+*Desarrollado como proyecto educativo para el bootcamp de desarrollo AI de [Factoría F5](https://factoriaf5.org) · 2026*
 
-*Developed as an educational project for the AI development bootcamp at [Factoría F5](https://factoriaf5.org) · 2025*
+*Developed as an educational project for the AI development bootcamp at [Factoría F5](https://factoriaf5.org) · 2026*
