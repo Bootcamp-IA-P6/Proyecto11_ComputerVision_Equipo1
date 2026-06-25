@@ -10,8 +10,12 @@ data/demo/*.mp4
 data/demo/*.jpg
 data/outputs/
 runs/
+data/demo/*.m4a
 data/uploads/
+data/outputs/
+!data/outputs/.gitkeep
 .DS_Store
 *.egg-info/
 dist/
 build/
+.streamlit/secrets.toml

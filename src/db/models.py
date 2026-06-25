@@ -26,9 +26,15 @@ class Video(Base):
     detections: Mapped[list["Detection"]] = relationship(
         back_populates="video", cascade="all, delete-orphan"
     )
-    brand_summaries: Mapped[list["BrandSummary"]] = relationship(back_populates="video")
-    competitive_analysis: Mapped["CompetitiveAnalysis | None"] = relationship(back_populates="video")
-    marketing_reports: Mapped[list["MarketingReport"]] = relationship(back_populates="video")
+    brand_summaries: Mapped[list["BrandSummary"]] = relationship(
+        back_populates="video", cascade="all, delete-orphan"
+    )
+    competitive_analysis: Mapped["CompetitiveAnalysis | None"] = relationship(
+        back_populates="video", cascade="all, delete-orphan", uselist=False
+    )
+    marketing_reports: Mapped[list["MarketingReport"]] = relationship(
+        back_populates="video", cascade="all, delete-orphan"
+    )
 
 
 class Detection(Base):

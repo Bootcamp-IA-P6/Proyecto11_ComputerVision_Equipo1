@@ -28,7 +28,7 @@ Related: [PROJECT_PLAN.md](./PROJECT_PLAN.md) · [PLAN_PROYECTO.md](./PLAN_PROYE
 
 | To Do | In Progress | In Review | Done |
 |-------|-------------|-----------|------|
-| 10 | 2 | 0 | 4 |
+| 7 | 1 | 3 | 5 |
 
 _Sync with GitHub Project columns. / Sincronizar con columnas del Project._
 
@@ -255,17 +255,24 @@ python -m src.detect_video --video path/to.mp4 --no-db
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#9](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/9) · **Open** |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Sprint day** | Day 4 |
 | **Assignee** | KangMirae (**B**) |
 | **Support** | C |
 | **Labels** | `metrics`, `backend`, `advanced`, `day-4` |
 
+**CLI**
+```bash
+python -m src.detect_video --video data/demo/demo1.mp4   # detections + metrics → DB
+python -m src.metrics_export --video-id <id> --export
+```
+
 **Acceptance criteria / Criterios de aceptación**
-- [ ] Coca-Cola and Pepsi seconds + % calculated correctly
-- [ ] Dominant brand and gap stored in DB
-- [ ] Metrics match manual spot-check on demo video
-- [ ] Frame sampling documented in README
+- [x] Coca-Cola and Pepsi seconds + % calculated correctly
+- [x] Dominant brand and gap stored in DB (`brand_summary`, `competitive_analysis`)
+- [x] JSON/text summary exported to `data/outputs/metrics_{id}.*`
+- [x] Frame sampling documented in README + `src/metrics.py` module docstring
+- [ ] Metrics match manual spot-check on demo video — _run on `demo1.mp4`_
 
 ---
 
@@ -274,17 +281,17 @@ python -m src.detect_video --video path/to.mp4 --no-db
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#10](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/10) · **Open** |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Sprint day** | Day 4 |
 | **Assignee** | KangMirae (**B**) |
 | **Support** | C |
 | **Labels** | `database`, `advanced`, `day-4` |
 
 **Acceptance criteria / Criterios de aceptación**
-- [ ] Crop images saved for sample detections
-- [ ] `crop_path` populated in Supabase
-- [ ] Crops viewable from path/URL
-- [ ] **Advanced DB requirement met**
+- [x] Crop images saved for sample detections (`src/crops.py` → `data/crops/{video_id}/`)
+- [x] `crop_path` populated in Supabase (`detect_video` + `pipeline`)
+- [x] Crops viewable from path/URL (Streamlit thumbnails + `scripts/verify_crops.py`)
+- [x] **Advanced DB requirement met**
 
 ---
 
@@ -331,17 +338,19 @@ python -m src.detect_video --video path/to.mp4 --no-db
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#13](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/13) · **Open** |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Sprint day** | Day 5 |
 | **Assignee** | KangMirae (**B**) |
 | **Support** | A |
 | **Labels** | `deploy`, `expert`, `day-5` |
 
 **Acceptance criteria / Criterios de aceptación**
-- [ ] Public URL accessible
-- [ ] Deployed app connects to Supabase
-- [ ] Full demo works on live URL (not just local)
-- [ ] Secrets not exposed in repo or logs
+- [ ] Public URL accessible — _deploy via [docs/DEPLOY.md](./DEPLOY.md)_
+- [x] Deploy config: `.streamlit/config.toml`, `packages.txt`, `runtime.txt`, secrets bootstrap
+- [x] `scripts/smoke_deploy.py` pre-flight check (no secrets logged)
+- [ ] Deployed app connects to Supabase — _verify on live URL_
+- [ ] Full demo works on live URL (upload → metrics → report) — _use 30–60 s MP4_
+- [x] Secrets not exposed in repo or logs (`.streamlit/secrets.toml` gitignored, UI redaction)
 
 ---
 

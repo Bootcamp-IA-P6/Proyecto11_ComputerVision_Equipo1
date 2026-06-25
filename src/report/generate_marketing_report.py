@@ -1,111 +1,174 @@
-import json
+import logging
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 from jinja2 import Template
 
 from src.config import get_settings
 
-PROMPT_VERSION = "v1"
+logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = (
-    "You are a brand visibility analyst working for Coca-Cola. "
-    "Write a concise marketing report using only the provided metrics. "
-    "Be professional and data-driven. Do not invent numbers."
-)
+PROMPT_VERSION = "1.0"
+MODEL_NAME = "gemini-2.0-flash"
 
-REPORT_TEMPLATE = Template("""# BrandSight Marketing Report
+SYSTEM_PROMPT = """Eres un analista de visibilidad de marca trabajando para Coca-Cola.
+Redacta un informe de marketing profesional y basado en datos usando SOLO las métricas proporcionadas.
+NO inventes cifras. Sé conciso y accionable.
+Usa la perspectiva del cliente Coca-Cola — el cliente compite contra Pepsi."""
 
-## Executive Summary
-Video **{{ video_filename }}** ({{ duration_sec }}s) shows Coca-Cola at **{{ coca_cola.visibility_pct }}%** screen time ({{ coca_cola.visible_seconds }}s) vs Pepsi at **{{ pepsi.visibility_pct }}%** ({{ pepsi.visible_seconds }}s). Dominant brand: **{{ dominant_brand }}**.
+REPORT_TEMPLATE = Template("""\
+# BrandSight — Informe de Visibilidad Coca-Cola
 
-## Coca-Cola Visibility
-- Screen time: {{ coca_cola.visible_seconds }}s ({{ coca_cola.visibility_pct }}%)
-- Detections: {{ coca_cola.detection_count }}
-- Avg confidence: {{ coca_cola.avg_confidence }}
+**Vídeo:** {{ video_filename }}
+**Duración:** {{ duration_sec }}s
+**Generado:** {{ generated_at }}
+**Cliente:** {{ client }}
 
-## Pepsi Competitive Visibility
-- Screen time: {{ pepsi.visible_seconds }}s ({{ pepsi.visibility_pct }}%)
-- Detections: {{ pepsi.detection_count }}
-- Avg confidence: {{ pepsi.avg_confidence }}
+---
 
-## Competitive Comparison
-Visibility gap: **{{ visibility_gap_sec }}s**. Balance: **{{ balance_label }}**.
-
-## Marketing Insights
-- Coca-Cola's share of visible time is {{ coca_cola.visibility_pct }}% in this placement.
-- Pepsi appears {{ pepsi.visibility_pct }}% of the video duration.
-- Gap of {{ visibility_gap_sec }}s may indicate stronger presence for {{ dominant_brand }}.
-
-## Recommendation for Coca-Cola
-{% if balance_label == 'coca_cola_dominant' %}
-Maintain current placement strategy; Coca-Cola leads visibility in this clip. Consider reinforcing high-visibility moments in future campaigns.
-{% elif balance_label == 'pepsi_dominant' %}
-Pepsi leads visibility in this clip. Recommend increasing Coca-Cola logo size, duration, or placement in similar content.
+## Resumen Ejecutivo
+{% if balance_label == "coca_cola_dominant" %}
+Coca-Cola dominó el tiempo en pantalla con {{ coca_cola.visible_seconds }}s de presencia de marca visible ({{ coca_cola.visibility_pct }}% del total del vídeo), superando a Pepsi por {{ visibility_gap_sec }}s.
+{% elif balance_label == "pepsi_dominant" %}
+Pepsi lideró el tiempo en pantalla con {{ pepsi.visible_seconds }}s de presencia de marca visible ({{ pepsi.visibility_pct }}% del total del vídeo), por delante de Coca-Cola por {{ visibility_gap_sec }}s. Se recomienda acción.
 {% else %}
-Visibility is balanced. Consider targeted boosts to Coca-Cola presence in key frames to gain competitive edge.
+Ambas marcas estuvieron prácticamente equilibradas. Coca-Cola: {{ coca_cola.visible_seconds }}s ({{ coca_cola.visibility_pct }}%). Pepsi: {{ pepsi.visible_seconds }}s ({{ pepsi.visibility_pct }}%). Diferencia: {{ visibility_gap_sec }}s.
 {% endif %}
+
+## Visibilidad de Coca-Cola
+- **Segundos visibles:** {{ coca_cola.visible_seconds }}s
+- **Porcentaje de visibilidad:** {{ coca_cola.visibility_pct }}%
+- **Número de detecciones:** {{ coca_cola.detection_count }}
+- **Confianza media:** {{ "%.1f"|format(coca_cola.avg_confidence * 100) }}%
+
+## Visibilidad Competitiva de Pepsi
+- **Segundos visibles:** {{ pepsi.visible_seconds }}s
+- **Porcentaje de visibilidad:** {{ pepsi.visibility_pct }}%
+- **Número de detecciones:** {{ pepsi.detection_count }}
+- **Confianza media:** {{ "%.1f"|format(pepsi.avg_confidence * 100) }}%
+
+## Comparativa Competitiva
+| Métrica | Coca-Cola | Pepsi | Diferencia |
+|---------|-----------|-------|------------|
+| Visibilidad (s) | {{ coca_cola.visible_seconds }} | {{ pepsi.visible_seconds }} | {{ visibility_gap_sec }} |
+| Visibilidad (%) | {{ coca_cola.visibility_pct }} | {{ pepsi.visibility_pct }} | {{ "%.1f"|format(coca_cola.visibility_pct - pepsi.visibility_pct) }} |
+| Detecciones | {{ coca_cola.detection_count }} | {{ pepsi.detection_count }} | — |
+
+**Marca dominante:** {{ dominant_brand }}
+**Balance:** {{ balance_label }}
+
+## Insights de Marketing
+{% if balance_label == "coca_cola_dominant" %}
+- La presencia de marca de Coca-Cola es sólida; mantener el posicionamiento actual en patrocinios.
+- Seguir invirtiendo en los tipos de escenas donde Coca-Cola lidera (eventos deportivos, primeros planos, tomas de público).
+- Monitorizar la visibilidad de Pepsi en nuevas categorías de contenido como alerta temprana de cambios competitivos.
+{% elif balance_label == "pepsi_dominant" %}
+- La mayor visibilidad de Pepsi requiere atención inmediata — revisar los contratos de patrocinio para este tipo de contenido.
+- Considerar aumentar los activos de marca Coca-Cola (pancartas, neveras, equipamiento de atletas) en momentos de alta exposición.
+- Analizar las marcas de tiempo específicas donde Pepsi lidera y atacar esas ubicaciones.
+{% else %}
+- El terreno de juego está nivelado — una pequeña inversión podría inclinar la balanza decisivamente a favor de Coca-Cola.
+- Centrarse en los momentos donde ambas marcas aparecen y buscar exclusividad o mayor presencia de Coca-Cola.
+- Hacer seguimiento de esta métrica a lo largo del tiempo; una tendencia hacia el dominio de Pepsi sería una señal de alerta temprana.
+{% endif %}
+
+## Recomendación
+{% if balance_label == "coca_cola_dominant" %}
+Reforzar las ubicaciones ganadoras. La estrategia actual de Coca-Cola está dando resultados — proteger y expandir.
+{% elif balance_label == "pepsi_dominant" %}
+Aumentar la visibilidad de marca Coca-Cola en este segmento de contenido, priorizando los momentos donde Pepsi lidera según las métricas anteriores.
+{% else %}
+Invertir en ubicación diferenciada para crear una ventaja clara de Coca-Cola frente al equilibrio actual entre ambas marcas.
+{% endif %}
+
+---
+*Informe generado por BrandSight AI · Modelo: {{ model_name }}*
 """)
 
 
-def _generate_with_gemini(metrics: dict) -> tuple[str, str]:
+def _generar_respaldo(payload: dict) -> str:
+    """Plantilla Jinja2 de respaldo cuando la API LLM no está disponible."""
+    return REPORT_TEMPLATE.render(
+        **payload,
+        generated_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        model_name="jinja2-respaldo",
+    )
+
+
+def _generar_con_gemini(payload: dict, api_key: str) -> tuple[str, str]:
+    """Llama a la API de Gemini con las métricas y devuelve (texto_informe, nombre_modelo)."""
     import google.generativeai as genai
 
-    settings = get_settings()
-    genai.configure(api_key=settings.gemini_api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash")
-    user_prompt = (
-        "Analyze this video visibility data and produce a report with sections: "
-        "Executive Summary, Coca-Cola Visibility, Pepsi Competitive Visibility, "
-        "Competitive Comparison, Marketing Insights, Recommendation for Coca-Cola.\n\n"
-        f"Data:\n{json.dumps(metrics, indent=2)}"
+    genai.configure(api_key=api_key)
+
+    prompt = f"""\
+Métricas de Visibilidad BrandSight:
+- Vídeo: {payload['video_filename']} ({payload['duration_sec']}s)
+- Coca-Cola: {payload['coca_cola']['visible_seconds']}s ({payload['coca_cola']['visibility_pct']}%)
+  Detecciones: {payload['coca_cola']['detection_count']} · Confianza media: {payload['coca_cola']['avg_confidence']}
+- Pepsi: {payload['pepsi']['visible_seconds']}s ({payload['pepsi']['visibility_pct']}%)
+  Detecciones: {payload['pepsi']['detection_count']} · Confianza media: {payload['pepsi']['avg_confidence']}
+- Marca dominante: {payload['dominant_brand']}
+- Balance: {payload['balance_label']} (diferencia: {payload['visibility_gap_sec']}s)
+
+Redacta un informe de marketing conciso con estas secciones:
+1. Resumen Ejecutivo
+2. Visibilidad de Coca-Cola
+3. Visibilidad Competitiva de Pepsi
+4. Comparativa Competitiva
+5. Insights de Marketing (2-3 viñetas)
+6. Recomendación para Coca-Cola
+
+Usa perspectiva del cliente Coca-Cola. Tono profesional. NO inventes cifras. El informe debe estar en español."""
+
+    modelo = genai.GenerativeModel(MODEL_NAME, system_instruction=SYSTEM_PROMPT)
+    respuesta = modelo.generate_content(
+        contents=[prompt],
+        generation_config={
+            "temperature": 0.3,
+            "max_output_tokens": 800,
+        },
     )
-    response = model.generate_content([SYSTEM_PROMPT, user_prompt])
-    return response.text, "gemini-2.0-flash"
+    return respuesta.text, MODEL_NAME
 
 
-def _generate_with_openai(metrics: dict) -> tuple[str, str]:
-    from openai import OpenAI
+def generate_marketing_report(payload: dict) -> tuple[str, str]:
+    """Genera un informe a partir de los datos de visibilidad.
 
-    settings = get_settings()
-    client = OpenAI(api_key=settings.openai_api_key)
-    user_prompt = (
-        "Analyze this video visibility data and produce a report with sections: "
-        "Executive Summary, Coca-Cola Visibility, Pepsi Competitive Visibility, "
-        "Competitive Comparison, Marketing Insights, Recommendation for Coca-Cola.\n\n"
-        f"Data:\n{json.dumps(metrics, indent=2)}"
-    )
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-    )
-    return response.choices[0].message.content or "", "gpt-4o-mini"
+    Args:
+        payload: Diccionario con las claves:
+            video_filename, duration_sec, client, competitor,
+            coca_cola (dict), pepsi (dict), dominant_brand,
+            visibility_gap_sec, balance_label.
 
+    Returns:
+        (texto_informe, nombre_modelo) — nombre_modelo será "jinja2-respaldo"
+        si la llamada a la API falla.
+    """
+    config = get_settings()
+    api_key = config.gemini_api_key
 
-def generate_marketing_report(metrics: dict, *, use_llm: bool = True) -> tuple[str, str]:
-    settings = get_settings()
-
-    if use_llm and settings.gemini_api_key:
+    if api_key:
         try:
-            return _generate_with_gemini(metrics)
-        except Exception:
-            pass
+            logger.info("Llamando a Gemini para el informe de marketing…")
+            return _generar_con_gemini(payload, api_key)
+        except Exception as exc:
+            logger.warning("Fallo en la llamada a Gemini — usando plantilla Jinja2 de respaldo: %s", exc)
 
-    if use_llm and settings.openai_api_key:
-        try:
-            return _generate_with_openai(metrics)
-        except Exception:
-            pass
-
-    return REPORT_TEMPLATE.render(**metrics), "template-fallback"
+    logger.info("Usando plantilla Jinja2 de respaldo para el informe.")
+    return _generar_respaldo(payload), "jinja2-respaldo"
 
 
-def save_report_to_file(video_id: int, report_text: str, outputs_dir: Path | None = None) -> Path:
-    settings = get_settings()
-    out_dir = outputs_dir or settings.outputs_dir
-    out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"report_video_{video_id}.md"
-    path.write_text(report_text, encoding="utf-8")
-    return path
+def save_report_to_file(
+    video_id: int,
+    report_text: str,
+    output_dir: Optional[Path] = None,
+) -> Path:
+    """Guarda el informe markdown en ``data/outputs/report_{video_id}.md``."""
+    config = get_settings()
+    config.ensure_dirs()
+    out_dir = output_dir or config.outputs_dir
+    report_path = out_dir / f"report_{video_id}.md"
+    report_path.write_text(report_text, encoding="utf-8")
+    return report_path
