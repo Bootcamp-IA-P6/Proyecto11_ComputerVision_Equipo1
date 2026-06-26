@@ -5,9 +5,11 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .mypy_cache/
+data/frames/
 data/crops/
 data/demo/*.mp4
 data/demo/*.m4a
+data/demo/*.jpg
 data/uploads/
 data/outputs/
 !data/outputs/.gitkeep
