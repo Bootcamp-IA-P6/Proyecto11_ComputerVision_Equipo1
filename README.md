@@ -3,7 +3,7 @@
 **Coca-Cola vs Pepsi — Brand Visibility Analysis / Análisis de Visibilidad de Marca**
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![YOLOv8](https://img.shields.io/badge/YOLOv8-nano-00FFFF?style=for-the-badge&logo=yolo&logoColor=black)
+![YOLO11](https://img.shields.io/badge/YOLO11-large-0055FF?style=for-the-badge)
 ![OpenCV](https://img.shields.io/badge/OpenCV-4.9-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.32+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
@@ -15,8 +15,9 @@
 
 **🇪🇸** Una aplicación de visión artificial impulsada por IA que analiza contenido de vídeo para medir y comparar la visibilidad de marca entre Coca-Cola y Pepsi. Sube un vídeo y el sistema detecta apariciones de logos, calcula métricas de visibilidad y genera un informe de marketing con IA.
 
-🔗 **Live Demo / Demo en vivo:** [https://brandsight.streamlit.app](https://brandsight.streamlit.app)
-📄 **Presentation / Presentación:** [View PDF / Ver PDF](docs/presentation.pdf)
+🎥 **Demo** [Ver vídeo de demostración](docs/computer-vision-demo.mp4)
+
+📄 **Presentation / Presentación:** [View PDF / Ver PDF](docs/BrandSight_Bold.pdf)
 
 ---
 
@@ -80,10 +81,10 @@ En marketing competitivo, entender la visibilidad de marca en contenido de víde
 | 🇬🇧 English | 🇪🇸 Español |
 |------------|------------|
 | 🎥 **Video Upload & Processing** — MP4 up to 200MB | 🎥 **Subida y procesado de vídeo** — MP4 hasta 200MB |
-| 🔍 **Logo Detection** — YOLOv8 nano fine-tuned | 🔍 **Detección de logos** — YOLOv8 nano ajustado |
+| 🔍 **Logo Detection** — YOLOv11 large fine-tuned | 🔍 **Detección de logos** — YOLOv11 large ajustado |
 | 📊 **Visibility Metrics** — Screen time, detections, confidence | 📊 **Métricas de visibilidad** — Tiempo, detecciones, confianza |
 | 📈 **Competitive Analysis** — Dominant brand, visibility gap | 📈 **Análisis competitivo** — Marca dominante, brecha |
-| 🤖 **AI Marketing Report** — Gemini/OpenAI + Jinja2 fallback | 🤖 **Informe IA** — Gemini/OpenAI + plantilla de respaldo |
+| 🤖 **AI Marketing Report** — Gemini + Jinja2 fallback | 🤖 **Informe IA** — Gemini + plantilla de respaldo |
 | 🖼️ **Detection Gallery** — Bounding box crops | 🖼️ **Galería de detecciones** — Recortes de logos |
 | 🎬 **Annotated Video** — Output with drawn detections | 🎬 **Vídeo anotado** — Salida con detecciones dibujadas |
 | 💾 **Supabase Persistence** — All results in PostgreSQL | 💾 **Persistencia Supabase** — Resultados en PostgreSQL |
@@ -115,7 +116,7 @@ En marketing competitivo, entender la visibilidad de marca en contenido de víde
 │  DETECTION  │    │   METRICS    │    │   AI REPORT      │
 │  DETECCIÓN  │    │   MÉTRICAS   │    │   INFORME IA     │
 │             │    │              │    │                  │
-│ YOLOv8 nano │    │ Visibility   │    │ Gemini / OpenAI  │
+│ YOLOv11 large │    │ Visibility   │    │ Gemini +  │
 │ detect_video│    │ Competitive  │    │ Jinja2 fallback  │
 │ crops.py    │    │ metrics.py   │    │ marketing_report │
 └──────┬──────┘    └──────┬───────┘    └────────┬─────────┘
@@ -206,7 +207,7 @@ brandsight/
 - **Python 3.11**
 - **Git**
 - **Supabase account** (free tier / plan gratuito)
-- **Google Gemini API key** or/o **OpenAI API key** *(optional / opcional)*
+- **Google Gemini API key** 
 - **Streamlit Cloud account** *(for deploy / para despliegue)*
 
 ### Local Development / Desarrollo Local
@@ -251,7 +252,6 @@ python scripts/smoke_deploy.py
 | `SUPABASE_URL` | ❌ | Supabase project URL | Supabase → Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | ❌ | Service role key | Supabase → Settings → API |
 | `GEMINI_API_KEY` | ❌ | Google Gemini API key | Google AI Studio |
-| `OPENAI_API_KEY` | ❌ | OpenAI API key | OpenAI Platform |
 | `MODEL_PATH` | ❌ | Path to YOLO weights | Default: `models/best.pt` |
 | `CONFIDENCE_THRESHOLD` | ❌ | Min detection confidence / Confianza mínima | Default: `0.5` |
 | `SAMPLE_STRIDE` | ❌ | Process every Nth frame / Procesar cada N frames | Default: `3` |
@@ -267,21 +267,21 @@ python scripts/smoke_deploy.py
 
 - **Classes / Clases:** `coca_cola` · `pepsi`
 - **Source / Fuente:** TV commercials, sports events, product placement / Anuncios, eventos deportivos, product placement
-- **Format / Formato:** YOLOv8 bounding boxes
+- **Format / Formato:** YOLOv11 bounding boxes
 - **Split / División:** Train / Validation / Test (Roboflow standard)
 
 ### Preprocessing & Augmentations / Preprocesado y Augmentaciones
 
 | Step / Paso | Detail / Detalle |
 |-------------|------------------|
-| Resize / Redimensionar | 640×640 px (YOLOv8 standard) |
+| Resize / Redimensionar | 640×640 px (YOLOv11 standard) |
 | Normalization / Normalización | [0, 1] — automatic via ultralytics |
 | Format / Formato | RGB conversion if needed / Conversión a RGB si necesario |
 
 | Augmentation / Augmentación | Parameter | Purpose / Propósito |
 |-----------------------------|-----------|---------------------|
-| Horizontal Flip / Volteo horizontal | p=0.5 | Left & right logo orientations |
-| Rotation / Rotación | ±10° | Robustness to tilt / Robustez ante inclinación |
+| Horizontal, Vertical Flip / Volteo horizontal, vertical | p=0.5 | Left & right logo orientations |
+| Rotation / Rotación | ±180° | Robustness to tilt / Robustez ante inclinación |
 | Brightness / Brillo | ±25% | Lighting variations / Variaciones de luz |
 | Contrast / Contraste | ±25% | Environment variation / Variación de entorno |
 | Scale / Escala | ±50% | Different distances / Distintas distancias |
@@ -291,11 +291,11 @@ python scripts/smoke_deploy.py
 
 | Parameter | Value | Rationale / Justificación |
 |-----------|-------|---------------------------|
-| Model / Modelo | YOLOv8 nano (`yolov8n.pt`) | ~6MB, fast inference, fits Streamlit Cloud |
+| Model / Modelo | YOLOv8 nano (`yolo11l.pt`) | ~6MB, fast inference, fits Streamlit Cloud |
 | Epochs / Épocas | 50 | Sufficient for 2-class transfer learning |
 | Image size / Tamaño | 640 | YOLOv8 standard |
 | Batch size / Lote | 16 | Fits Colab T4 GPU |
-| Optimizer | AdamW | YOLOv8 default |
+| Optimizer | AdamW | YOLOv11 default |
 | Learning rate | 0.001 | Fine-tuning from COCO weights |
 
 **To retrain / Para re-entrenar:**
@@ -422,7 +422,7 @@ python scripts/smoke_deploy.py && python -m scripts.test_db_insert
 |----------------------|--------------------------------|
 | **Dataset** | Custom Roboflow dataset — 2 classes (`coca_cola`, `pepsi`) — bounding box annotations |
 | **Preprocessing** | 640×640 resize · automatic normalization via ultralytics |
-| **Fine-tuning** | YOLOv8 nano pretrained on COCO → 50 epochs → 2-class specialization |
+| **Fine-tuning** | YOLOv11 large pretrained on COCO → 50 epochs → 2-class specialization |
 | **Augmentations** | Flip · Rotation · Brightness · Contrast · Scale · Mosaic |
 | **Real-time detection** | `detect_webcam.py` — local live demo during presentation / demo en vivo durante presentación |
 | **Frame sampling** | Stride-based (default 3) · configurable via `SAMPLE_STRIDE` |
@@ -433,9 +433,9 @@ python scripts/smoke_deploy.py && python -m scripts.test_db_insert
 
 | Role / Rol | Responsibilities / Responsabilidades |
 |------------|--------------------------------------|
-| **Product Owner (A)** | Scope · user stories · README · demo videos · AI report · Streamlit UI · presentation / Alcance · historias de usuario · README · vídeos demo · informe IA · UI Streamlit · presentación |
-| **Scrum Master + Backend (B)** | Kanban · Git/PRs · pipeline · Supabase · metrics · crops · deployment / Kanban · Git/PRs · pipeline · Supabase · métricas · recortes · despliegue |
-| **ML Engineer (C)** | Dataset (Roboflow) · training (Colab) · `best.pt` · `detect_image` · `detect_webcam` |
+| **Product Owner (Mar Izquierdo Vaquer)** | Scope · user stories · README · demo videos · AI report · Streamlit UI · presentation / Alcance · historias de usuario · README · vídeos demo · informe IA · UI Streamlit · presentación |
+| **Scrum Master + Backend (Mirae Kang)** | Kanban · Git/PRs · pipeline · Supabase · metrics · crops · deployment / Kanban · Git/PRs · pipeline · Supabase · métricas · recortes · despliegue |
+| **ML Engineer (Juan Miguel Iriondo Ortega)** | Dataset (Roboflow) · training (Colab) · `best.pt` · `detect_image` · `detect_webcam` |
 
 ---
 
