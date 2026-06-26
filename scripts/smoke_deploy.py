@@ -9,7 +9,7 @@ sys.path.insert(0, str(ROOT))
 from src.config import get_settings
 from src.db.connection import check_connection, verify_schema
 
-REQUIRED_ENV = ("DATABASE_URL",)
+REQUIRED_ENV = ("DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY")
 OPTIONAL_ENV = ("GEMINI_API_KEY", "OPENAI_API_KEY")
 
 
@@ -48,6 +48,16 @@ def main() -> int:
         print(f"ERROR: Missing tables: {', '.join(missing)}", file=sys.stderr)
         return 1
     print("OK: Schema (5 tables)")
+
+    try:
+        from src.supabase_storage import storage_configured, verify_storage_bucket
+
+        if storage_configured():
+            verify_storage_bucket()
+            print("OK: Supabase Storage bucket")
+    except Exception as exc:
+        print(f"ERROR: Storage check failed ({type(exc).__name__})", file=sys.stderr)
+        return 1
 
     for msg in warnings:
         print(f"WARN: {msg}")

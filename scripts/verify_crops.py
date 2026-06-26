@@ -1,4 +1,4 @@
-"""Verify bbox crops on disk match Supabase ``detections.crop_path`` (#10)."""
+"""Verify detection crops resolve from disk or Supabase Storage (#10)."""
 
 import argparse
 import sys
@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.crops import resolve_crop_path
+from src.crops import crop_path_is_readable, resolve_crop_path
 from src.db.connection import get_db_session
 from src.db import repository
 
@@ -39,17 +39,24 @@ def main() -> int:
         return 1
 
     with_crop = [d for d in rows if d["crop_path"]]
-    readable = [d for d in with_crop if resolve_crop_path(d["crop_path"])]
+    readable = [d for d in with_crop if crop_path_is_readable(d["crop_path"])]
     print(f"Video #{args.video_id} — {filename}")
-    print(f"Detections: {len(rows)} | crop_path set: {len(with_crop)} | files on disk: {len(readable)}")
+    print(
+        f"Detections: {len(rows)} | crop_path set: {len(with_crop)} | readable (disk or Storage): {len(readable)}"
+    )
 
     for det in rows[: args.limit]:
-        path = resolve_crop_path(det["crop_path"])
-        status = str(path) if path else (det["crop_path"] or "—")
+        resolved = resolve_crop_path(det["crop_path"])
+        if isinstance(resolved, Path):
+            status = str(resolved)
+        elif isinstance(resolved, str):
+            status = resolved[:80] + ("…" if len(resolved) > 80 else "")
+        else:
+            status = det["crop_path"] or "—"
         print(f"  frame {det['frame_number']:5d}  {det['brand']:10s}  {status}")
 
     if len(readable) == 0:
-        print("ERROR: no readable crop files", file=sys.stderr)
+        print("ERROR: no readable crop paths", file=sys.stderr)
         return 1
     return 0
 

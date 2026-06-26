@@ -3,6 +3,12 @@
 from pathlib import Path
 
 from src.config import get_settings
+from src.supabase_storage import (
+    crop_object_key,
+    parse_storage_uri,
+    storage_configured,
+    upload_crop_file,
+)
 
 
 def crop_dir_for_video(video_id: int) -> Path:
@@ -20,10 +26,12 @@ def save_detection_crops(
     *,
     max_crops: int | None = None,
 ) -> list[dict]:
-    """Save logo crops to disk and return detection dicts with ``crop_path`` + ``video_id``.
+    """Save logo crops and return detection dicts with ``crop_path`` + ``video_id``.
 
-    Crops are stored under ``data/crops/{video_id}/{brand}_{index}.jpg``.
-    Paths are absolute so they resolve locally and in Streamlit on the same machine.
+    Crops are written under ``data/crops/{video_id}/`` and uploaded to Supabase Storage
+    when ``SUPABASE_URL`` and ``SUPABASE_SERVICE_ROLE_KEY`` are set. ``crop_path`` stores
+    a ``storage:{bucket}/{video_id}/{brand}_{index}.jpg`` URI, or a local absolute path
+    as fallback when Storage is not configured.
     """
     if not detections:
         return []
@@ -32,6 +40,7 @@ def save_detection_crops(
 
     settings = get_settings()
     crop_dir = crop_dir_for_video(video_id)
+    upload_enabled = storage_configured()
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         return [{**det, "crop_path": None, "video_id": video_id} for det in detections]
@@ -61,7 +70,11 @@ def save_detection_crops(
                 crop = frame[y:y2, x:x2]
                 crop_file = crop_dir / f"{det['brand']}_{idx}.jpg"
                 cv2.imwrite(str(crop_file), crop)
-                crop_path = str(crop_file.resolve())
+                if upload_enabled:
+                    object_key = crop_object_key(video_id, det["brand"], idx)
+                    crop_path = upload_crop_file(crop_file, object_key)
+                else:
+                    crop_path = str(crop_file.resolve())
 
         enriched.append({**det, "crop_path": crop_path, "video_id": video_id})
 
@@ -78,9 +91,23 @@ def count_saved_crops(detections: list[dict]) -> int:
     return sum(1 for det in detections if det.get("crop_path"))
 
 
-def resolve_crop_path(crop_path: str | None) -> Path | None:
-    """Return a readable path if the crop file exists."""
+def resolve_crop_path(crop_path: str | None) -> Path | str | None:
+    """Return a readable local path or signed URL for display."""
     if not crop_path:
         return None
+
+    parsed = parse_storage_uri(crop_path)
+    if parsed is not None:
+        if not storage_configured():
+            return None
+        from src.supabase_storage import create_signed_crop_url
+
+        bucket, object_key = parsed
+        return create_signed_crop_url(bucket, object_key)
+
     path = Path(crop_path)
     return path if path.is_file() else None
+
+
+def crop_path_is_readable(crop_path: str | None) -> bool:
+    return resolve_crop_path(crop_path) is not None

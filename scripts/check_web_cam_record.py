@@ -39,7 +39,7 @@ while True:
     results = model(frame, conf=0.5)
 
     # Dibujamos las cajas de detección
-    # El parámetro 'render()' u 'output' en YOLOv8 se obtiene con .plot()
+    # Ultralytics YOLO annotated frame via .plot()
     frame_con_detecciones = results[0].plot()
 
     # Guardamos el fotograma actual en el archivo de video

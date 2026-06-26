@@ -67,6 +67,17 @@ with st.sidebar:
     except Exception as exc:
         st.error(f"Database error / Error BD: {_safe_error(exc)}")
 
+    from src.supabase_storage import storage_configured, verify_storage_bucket
+
+    if storage_configured():
+        try:
+            verify_storage_bucket()
+            st.success("Storage ready / Almacenamiento listo")
+        except Exception as exc:
+            st.warning(f"Storage / Almacenamiento: {_safe_error(exc)}")
+    else:
+        st.warning("Storage not configured — set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY")
+
     st.divider()
     st.markdown("**Settings**")
     st.text(f"Model: {settings.model_path.name}")

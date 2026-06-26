@@ -16,7 +16,7 @@ Documentos relacionados: [BRIEFING_README.md](./BRIEFING_README.md) · [PROJECT_
 | **Cliente** | Coca-Cola |
 | **Competidor** | Pepsi |
 | **Objetivo** | Medir y comparar la visibilidad de marca en contenido de vídeo |
-| **Stack principal** | YOLOv8 · OpenCV · **Supabase** (PostgreSQL) · Streamlit · API LLM · Deploy cloud |
+| **Stack principal** | YOLO11 · OpenCV · **Supabase** (PostgreSQL + Storage) · Streamlit · API LLM · Deploy cloud |
 
 ### Pipeline
 
@@ -124,7 +124,7 @@ Team Drive/
 └──────────────┬─────────────────────────┬────────────────────┘
                │                         │
 ┌──────────────▼──────────┐   ┌──────────▼────────────────────┐
-│  Supabase PostgreSQL    │   │  Supabase Storage (opcional)  │
+│  Supabase PostgreSQL    │   │  Supabase Storage             │
 │  videos · detections    │   │  bucket: brandsight-crops     │
 │  summaries · reports    │   │  vídeos · crops · informes    │
 └─────────────────────────┘   └─────────────────────────────┘
@@ -133,14 +133,14 @@ Team Drive/
 │  API LLM (Gemini / OpenAI) — generación del informe marketing │
 └─────────────────────────────────────────────────────────────┘
 
-Entrenamiento (offline): Roboflow → Google Colab → best.pt → Drive → bundle deploy
+Entrenamiento (offline): Roboflow → Google Colab (base `yolo11l.pt`) → `best.pt` → Drive → bundle deploy
 ```
 
 ### Stack tecnológico
 
 | Capa | Elección |
 |------|----------|
-| Detección | Ultralytics YOLOv8 (`yolov8n` o `yolov8s`) |
+| Detección | Ultralytics YOLO11 — entrenar desde `yolo11l.pt`, desplegar `best.pt` fine-tuned |
 | Entrenamiento | Google Colab + Roboflow |
 | Vídeo | OpenCV |
 | Base de datos | **Supabase** (PostgreSQL — tier gratis) |
@@ -161,7 +161,7 @@ Entrenamiento (offline): Roboflow → Google Colab → best.pt → Drive → bun
 3. **Project Settings → Database** → copiar **Connection string** (modo URI)
 4. Usar el string del **Session pooler** para Streamlit / apps servidor
 5. Compartir `DATABASE_URL` con el equipo por canal seguro (no Git)
-6. *(Opcional)* **Storage** → crear bucket `brandsight-crops` (público o URLs firmadas)
+6. **Storage** → ejecutar `sql/storage.sql` o crear bucket `brandsight-crops` (privado; la app usa URLs firmadas)
 
 **Formato connection string:**
 ```
@@ -338,7 +338,7 @@ balance_label   = 'balanced' si gap < 5% duración, si no '{ganador}_dominant'
 
 | Quién | Tareas |
 |-------|--------|
-| ML | Terminar etiquetado, entrenamiento Colab completo, `best.pt` → Drive |
+| ML | Terminar etiquetado, entrenamiento Colab (`yolo11l.pt` → `best.pt`) → Drive |
 | Backend | `detect_image.py`, módulo conexión BD, test insert en los 3 OS |
 | ML | Empezar `detect_webcam.py` si `best.pt` disponible |
 | PO | README: setup, variables de entorno, cómo ejecutar |
@@ -449,7 +449,7 @@ ai-computer-vision-objects/
 │   ├── BRIEFING_README.md
 │   ├── PROJECT_PLAN.md
 │   └── PLAN_PROYECTO.md
-├── models/                   # best.pt (gitignored)
+├── models/                   # best.pt (pesos fine-tuned)
 ├── notebooks/
 │   └── train_colab.ipynb
 ├── src/

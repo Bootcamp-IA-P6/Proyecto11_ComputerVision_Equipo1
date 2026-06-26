@@ -1,9 +1,9 @@
 # Supabase setup — ISSUE-03
 
 **Owner:** B (SM) · **Day:** 1  
-**Goal:** Live Supabase project with all BrandSight tables; `DATABASE_URL` shared securely with the team.
+**Goal:** Live Supabase project with all BrandSight tables, Storage bucket for crops, and secrets shared securely with the team.
 
-Related: [KANBAN.md](./KANBAN.md) · [sql/schema.sql](../sql/schema.sql)
+Related: [KANBAN.md](./KANBAN.md) · [sql/schema.sql](../sql/schema.sql) · [sql/storage.sql](../sql/storage.sql)
 
 ---
 
@@ -40,7 +40,17 @@ Wait until the project status is **Active** (~2 min).
 
 ---
 
-## 3. Get `DATABASE_URL` (Session pooler)
+## 3. Create Storage bucket for crops
+
+1. **SQL Editor** → run [`sql/storage.sql`](../sql/storage.sql)  
+   **or** Dashboard → **Storage** → **New bucket** → name `brandsight-crops`, **private**
+2. Verify the bucket appears under **Storage**
+
+The app uploads bbox crops to `brandsight-crops/{video_id}/{brand}_{index}.jpg` and stores a `storage:…` URI in `detections.crop_path`.
+
+---
+
+## 4. Get `DATABASE_URL` (Session pooler)
 
 1. **Project Settings** → **Database**
 2. **Connection string** → URI
@@ -57,23 +67,38 @@ SQLAlchemy accepts this as-is; the app auto-adds `+psycopg2` if needed.
 
 ---
 
-## 4. Local `.env` (each teammate)
+## 5. Get Storage API credentials
+
+1. **Project Settings** → **API**
+2. Copy **Project URL** → `SUPABASE_URL`
+3. Copy **service_role** key → `SUPABASE_SERVICE_ROLE_KEY` (**never expose in frontend / Git**)
+
+---
+
+## 6. Local `.env` (each teammate)
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` — set `DATABASE_URL` only for ISSUE-03 (other keys can wait).
+Edit `.env` — set at minimum:
+
+```bash
+DATABASE_URL=...
+SUPABASE_URL=https://[project-ref].supabase.co
+SUPABASE_SERVICE_ROLE_KEY=...
+```
 
 **Never commit `.env`.**
 
 ---
 
-## 5. Verify from your machine
+## 7. Verify from your machine
 
 ```bash
 pip install -r requirements.txt
 python -m scripts.check_db
+python -m scripts.check_storage
 ```
 
 Expected output:
@@ -81,13 +106,14 @@ Expected output:
 ```
 Connection OK
 Schema OK — 5 tables: videos, detections, brand_summary, competitive_analysis, marketing_reports
+OK: Storage bucket 'brandsight-crops' is available
 ```
 
 If schema check fails, re-run `sql/schema.sql` in the SQL Editor.
 
 ---
 
-## 6. Share credentials with team (secure channel)
+## 8. Share credentials with team (secure channel)
 
 Share via **team password manager**, **encrypted note**, or **DM** — not:
 
@@ -95,43 +121,23 @@ Share via **team password manager**, **encrypted note**, or **DM** — not:
 - Public Slack channels
 - Screenshots with password visible
 
-**Minimum to share:**
-
 | Secret | Who needs it |
 |--------|----------------|
 | `DATABASE_URL` (Session pooler) | A, B, C — Day 1 |
-| Supabase dashboard login | B (SM); optional read for others |
-
-**Optional (ISSUE-11 — crops in cloud):**
-
-| Secret | When |
-|--------|------|
-| `SUPABASE_URL` | Day 4+ |
-| `SUPABASE_SERVICE_ROLE_KEY` | Day 4+ — **service role, never in frontend** |
+| `SUPABASE_URL` | A, B, C — Day 1+ |
+| `SUPABASE_SERVICE_ROLE_KEY` | A, B, C — Day 1+ (backend only) |
+| Supabase dashboard login | B (SM) |
 
 ---
 
-## 7. Optional — Storage bucket `brandsight-crops`
-
-**Option A — Dashboard**
-
-1. **Storage** → **New bucket**
-2. Name: `brandsight-crops`
-3. Public: **off** (use signed URLs or app-side access)
-
-**Option B — SQL**
-
-Run [`sql/storage.sql`](../sql/storage.sql) in SQL Editor.
-
----
-
-## 8. Close ISSUE-03
+## 9. Close ISSUE-03
 
 - [ ] Supabase project live
 - [ ] All 5 tables in Table Editor
-- [ ] `python -m scripts.check_db` passes on SM machine
-- [ ] `DATABASE_URL` shared with A and C
-- [ ] Optional: `brandsight-crops` bucket created
+- [ ] `brandsight-crops` bucket created
+- [ ] `python -m scripts.check_db` passes
+- [ ] `python -m scripts.check_storage` passes
+- [ ] `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` shared with A and C
 - [ ] Update [KANBAN.md](./KANBAN.md) ISSUE-03 → **Done**
 
 ---
@@ -144,9 +150,11 @@ Run [`sql/storage.sql`](../sql/storage.sql) in SQL Editor.
 | `password authentication failed for user "postgres"` | Pooler username must be **`postgres.[project-ref]`**, not `postgres`. Copy URI from Dashboard → Database → **Session pooler** |
 | `password authentication failed` (correct username) | Wrong DB password, or special chars not URL-encoded (`@` → `%40`, `#` → `%23`). Reset password in Project Settings → Database |
 | Missing tables | Re-run `sql/schema.sql`; check SQL Editor error panel |
+| Bucket not found | Re-run `sql/storage.sql` or create bucket in Dashboard → Storage |
+| Crop upload fails | Confirm `SUPABASE_SERVICE_ROLE_KEY` (not anon key) and bucket name `brandsight-crops` |
 | SSL errors | Ensure URI is from Supabase dashboard (includes SSL by default) |
 | IPv6 issues on pooler | Try **Transaction pooler** temporarily for local test only |
 
 ---
 
-_Configuración en español: mismos pasos; el SM (B) ejecuta y comparte `DATABASE_URL` por canal seguro._
+_Configuración en español: mismos pasos; el SM (B) ejecuta y comparte credenciales por canal seguro._
