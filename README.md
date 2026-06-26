@@ -1,6 +1,6 @@
 # BrandSight
 
-Brand visibility analysis for **Coca-Cola** vs **Pepsi** using custom YOLO detection, Supabase PostgreSQL, and AI-generated marketing reports.
+Brand visibility analysis for **Coca-Cola** vs **Pepsi** using custom YOLO11 detection, Supabase PostgreSQL + Storage, and AI-generated marketing reports.
 
 ## Quick start
 
@@ -19,18 +19,21 @@ Step-by-step: **[docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)** (ISSUE-03)
 
 1. Create a project at [supabase.com](https://supabase.com/)
 2. Run `sql/schema.sql` in the SQL Editor
-3. Copy the **Session pooler** connection string into `.env` as `DATABASE_URL`
+3. Run `sql/storage.sql` to create the `brandsight-crops` bucket
+4. Copy the **Session pooler** connection string into `.env` as `DATABASE_URL`
+5. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Project Settings → API)
 
 ### 3. Verify database
 
 ```bash
 python -m scripts.check_db
+python -m scripts.check_storage
 python -m scripts.test_db_insert   # round-trip insert into videos (ISSUE-04)
 ```
 
 ### 4. Add model weights
 
-Place your fine-tuned `best.pt` in `models/` (from Google Colab training).
+Place your fine-tuned `best.pt` in `models/` (Colab trains from the `yolo11l.pt` base checkpoint).
 
 ### 5. Run web app
 
@@ -49,16 +52,17 @@ src/
   detect_video.py     Video inference CLI
   metrics.py          Visibility calculations
   metrics_export.py   Metrics JSON/text export CLI (#9)
-  crops.py            Bbox crop extraction + crop_path (#10)
+  crops.py            Bbox crop extraction + Supabase Storage upload (#10)
+  supabase_storage.py Supabase Storage client for crop uploads
   pipeline.py         End-to-end analysis orchestrator
   report/             AI marketing report generator
 data/
   demo/               Demo videos
-  crops/              Saved logo crops
+  crops/              Local crop cache (also uploaded to Supabase Storage)
   uploads/            Uploaded videos (runtime)
-models/               best.pt (not in Git)
+models/               best.pt (fine-tuned weights; training base: yolo11l.pt)
 sql/schema.sql        Supabase schema (5 tables)
-sql/storage.sql       Optional Storage bucket for crops
+sql/storage.sql       Storage bucket `brandsight-crops` for crops
 notebooks/            Colab training (to add)
 docs/                 Project plans + Kanban
 ```
@@ -98,11 +102,10 @@ Exported files: `data/outputs/metrics_{video_id}.json` and `.txt`.
 
 ## Bbox crops (#10)
 
-Each detection bbox is cropped from the source video and saved under `data/crops/{video_id}/`.
-The absolute path is stored in `detections.crop_path` when persisting via `detect_video` or `pipeline`.
-Streamlit shows up to 12 crop thumbnails after analysis. Optional Supabase Storage: `sql/storage.sql`.
+Each detection bbox is cropped from the source video, cached under `data/crops/{video_id}/`, and uploaded to Supabase Storage (`brandsight-crops`). The `storage:…` URI is stored in `detections.crop_path`. Streamlit shows signed URLs for crop thumbnails.
 
 ```bash
+python -m scripts.check_storage
 python -m src.detect_video --video data/demo/demo1.mp4
 python -m scripts.verify_crops --video-id <id>
 ```
@@ -124,7 +127,7 @@ python -m scripts.smoke_deploy   # pre-flight before deploy
 
 1. Push repo to GitHub (`models/best.pt` must be on the branch)
 2. [share.streamlit.io](https://share.streamlit.io) → New app → `app/streamlit_app.py`
-3. Paste secrets (see `.streamlit/secrets.toml.example`) — `DATABASE_URL`, `GEMINI_API_KEY`, etc.
+3. Paste secrets (see `.streamlit/secrets.toml.example`) — `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, etc.
 4. Deploy → verify sidebar **Supabase connected** → upload a short MP4 and run analysis
 
 **Live demo:** _add URL after deploy, e.g. `https://brandsight-equipo1.streamlit.app`_

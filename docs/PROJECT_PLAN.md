@@ -16,7 +16,7 @@ Related docs: [BRIEFING_README.md](./BRIEFING_README.md) · [PLAN_PROYECTO.md](.
 | **Client** | Coca-Cola |
 | **Competitor** | Pepsi |
 | **Goal** | Measure and compare brand visibility in video content |
-| **Core stack** | YOLOv8 · OpenCV · **Supabase** (PostgreSQL) · Streamlit · LLM API · Cloud deploy |
+| **Core stack** | YOLO11 · OpenCV · **Supabase** (PostgreSQL + Storage) · Streamlit · LLM API · Cloud deploy |
 
 ### Pipeline
 
@@ -52,7 +52,7 @@ Build a proof-of-concept **brand visibility analyzer** that:
 | Save detections in database | ✅ Supabase (PostgreSQL) |
 | Multi-brand model (Advanced) | ✅ 2 classes |
 | Confidence % (Advanced) | ✅ On overlay + in DB |
-| Bbox crops (Advanced) | ✅ Saved to cloud/local storage, path in DB |
+| Bbox crops (Advanced) | ✅ Uploaded to Supabase Storage (`brandsight-crops`), path in DB |
 | Web front (Expert) | ✅ Streamlit — deployed |
 | Cloud / API (Expert) | ✅ Deployed app + optional FastAPI endpoint |
 
@@ -124,7 +124,7 @@ Team Drive/
 └──────────────┬─────────────────────────┬────────────────────┘
                │                         │
 ┌──────────────▼──────────┐   ┌──────────▼────────────────────┐
-│  Supabase PostgreSQL    │   │  Supabase Storage (optional)  │
+│  Supabase PostgreSQL    │   │  Supabase Storage             │
 │  videos · detections    │   │  bucket: brandsight-crops     │
 │  summaries · reports    │   │  videos · crops · reports     │
 └─────────────────────────┘   └─────────────────────────────┘
@@ -133,14 +133,14 @@ Team Drive/
 │  LLM API (Gemini / OpenAI) — marketing report generation    │
 └─────────────────────────────────────────────────────────────┘
 
-Training (offline): Roboflow → Google Colab → best.pt → Drive → deploy bundle
+Training (offline): Roboflow → Google Colab (`yolo11l.pt` base) → `best.pt` → Drive → deploy bundle
 ```
 
 ### Tech Stack
 
 | Layer | Choice |
 |-------|--------|
-| Detection | Ultralytics YOLOv8 (`yolov8n` or `yolov8s`) |
+| Detection | Ultralytics YOLO11 — train from `yolo11l.pt`, deploy fine-tuned `best.pt` |
 | Training | Google Colab + Roboflow |
 | Video | OpenCV |
 | Database | **Supabase** (PostgreSQL — free tier) |
@@ -161,7 +161,7 @@ Training (offline): Roboflow → Google Colab → best.pt → Drive → deploy b
 3. **Project Settings → Database** → copy the **Connection string** (URI mode)
 4. Use the **Session pooler** string for Streamlit / server apps
 5. Share `DATABASE_URL` with the team via secure channel (not Git)
-6. *(Optional)* **Storage** → create bucket `brandsight-crops` (public or signed URLs)
+6. **Storage** → run `sql/storage.sql` or create bucket `brandsight-crops` (private; app uses signed URLs)
 
 **Connection string format:**
 ```
@@ -311,7 +311,7 @@ balance_label   = 'balanced' if gap < 5% of duration, else '{winner}_dominant'
 | Realtime webcam | **`detect_webcam.py` — local only** (OpenCV + YOLO); not in production |
 | Frame sampling | Every 3rd–5th frame (document in README) |
 | Database | **Supabase** (PostgreSQL) |
-| File storage | Supabase Storage bucket or app temp dir + DB paths |
+| File storage | Supabase Storage bucket `brandsight-crops` (+ local cache under `data/crops/`) |
 | Frontend | Streamlit only |
 | Deploy | Streamlit Cloud or Railway |
 | LLM | Gemini free tier or OpenAI |
@@ -338,7 +338,7 @@ balance_label   = 'balanced' if gap < 5% of duration, else '{winner}_dominant'
 
 | Who | Tasks |
 |-----|--------|
-| ML | Finish labeling, full Colab train, `best.pt` → Drive |
+| ML | Finish labeling, full Colab train (`yolo11l.pt` → `best.pt`) → Drive |
 | Backend | `detect_image.py`, DB connection module, test insert on all OS |
 | ML | Start `detect_webcam.py` once `best.pt` is available |
 | PO | README: setup, env vars, how to run |
@@ -449,7 +449,7 @@ ai-computer-vision-objects/
 │   ├── BRIEFING_README.md
 │   ├── PROJECT_PLAN.md
 │   └── PLAN_PROYECTO.md
-├── models/                   # best.pt (gitignored — bundled at deploy)
+├── models/                   # best.pt (fine-tuned — bundled at deploy)
 ├── notebooks/
 │   └── train_colab.ipynb
 ├── src/
@@ -480,7 +480,7 @@ ai-computer-vision-objects/
 # Supabase → Project Settings → Database → Connection string (URI)
 DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
 
-# Optional — Supabase Storage for crops/videos
+# Supabase Storage for bbox crops
 SUPABASE_URL=https://[project-ref].supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 

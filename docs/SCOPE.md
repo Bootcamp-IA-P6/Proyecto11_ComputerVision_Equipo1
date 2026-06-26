@@ -20,7 +20,7 @@ Related: [USER_STORIES.md](./USER_STORIES.md) · [KANBAN.md](./KANBAN.md) · [PL
 | Area | Decision |
 |------|----------|
 | **Brands** | **Exactly 2:** `coca_cola` (class 0) and `pepsi` (class 1). No third brand. |
-| **Detection** | YOLOv8 fine-tuned (`yolov8n` or `yolov8s`); training in Google Colab only |
+| **Detection** | YOLO11 fine-tuned — train from `yolo11l.pt` base, deploy `best.pt`; training in Google Colab only |
 | **Input** | MP4 video upload (H.264) + optional pre-loaded demo clips |
 | **Local webcam** | **`src/detect_webcam.py`** — realtime logo detection from the machine's camera; **local execution only** (not on deployed Streamlit) |
 | **Output** | Annotated video, visibility metrics, competitive analysis, AI report, DB persistence; live annotated webcam window locally |
@@ -43,7 +43,7 @@ Related: [USER_STORIES.md](./USER_STORIES.md) · [KANBAN.md](./KANBAN.md) · [PL
 | Perfect model accuracy | PoC; iterate with demo video frames if needed |
 | Celery / job queues | Streamlit synchronous pipeline is enough |
 | Microservice REST API | Optional stretch; deploy Streamlit first |
-| Model weights in Git | `best.pt` lives in Team Drive + deploy secrets |
+| Model weights in Git | `best.pt` (fine-tuned) lives in Team Drive + deploy bundle |
 | Secrets in repository | `.env` local only; platform secrets for deploy |
 
 ---
