@@ -92,10 +92,10 @@ with tab_upload:
     uploaded = st.file_uploader("Upload video (MP4) / Subir vídeo", type=["mp4"])
     demo_dir = settings.uploads_dir.parent / "demo"
     demo_files = sorted(demo_dir.glob("*.mp4")) if demo_dir.exists() else []
-    demo_choice = st.selectbox(
-        "Or select demo video / O elegir vídeo demo",
-        ["—"] + [f.name for f in demo_files],
-    )
+    # demo_choice = st.selectbox(
+    #     "Or select demo video / O elegir vídeo demo",
+    #     ["—"] + [f.name for f in demo_files],
+    # )
 
     if _is_cloud and not demo_files:
         st.caption("No bundled demo on Cloud — upload a 30–60 s MP4.")
@@ -106,8 +106,8 @@ with tab_upload:
         if uploaded is not None:
             video_path = settings.uploads_dir / uploaded.name
             video_path.write_bytes(uploaded.getvalue())
-        elif demo_choice != "—":
-            video_path = demo_dir / demo_choice
+        # elif demo_choice != "—":
+        #     video_path = demo_dir / demo_choice
 
         if video_path is None:
             st.warning("Select or upload a video first. / Selecciona o sube un vídeo.")
