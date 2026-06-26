@@ -239,7 +239,7 @@ def main() -> None:
         total_frames=frames,
         sample_stride=stride,
     )
-    print(f"Supabase: videos.id={video_id} | {len(detections)} rows in detections | {crops_saved} crops on disk")
+    print(f"Supabase: videos.id={video_id} | {len(detections)} rows in detections | {crops_saved} crops saved")
     if metrics_payload:
         from src.metrics_export import format_metrics_text
 
