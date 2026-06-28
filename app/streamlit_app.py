@@ -13,6 +13,7 @@ from app.bootstrap_secrets import inject_secrets, redact_secrets
 inject_secrets()
 
 from src.config import get_settings
+from src.annotated_video import resolve_annotated_path
 from src.crops import resolve_crop_path
 from src.db.connection import check_connection, get_db_session
 from src.db import repository
@@ -196,9 +197,14 @@ with tab_upload:
                 chart_df = df.set_index("brand")[["visible_seconds"]]
                 st.bar_chart(chart_df)
 
-            annotated = video_data.get("annotated_path")
-            if annotated and Path(annotated).exists():
-                st.video(annotated)
+            annotated = resolve_annotated_path(video_data.get("annotated_path"))
+            if annotated:
+                st.video(str(annotated))
+            elif video_data.get("annotated_path"):
+                st.caption(
+                    "Annotated video unavailable — re-run analysis to upload to Storage. "
+                    "/ Vídeo anotado no disponible — vuelve a ejecutar el análisis."
+                )
 
             crop_samples = [
                 (row, resolve_crop_path(row["crop_path"]))

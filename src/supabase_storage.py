@@ -47,8 +47,8 @@ def parse_storage_uri(uri: str) -> tuple[str, str] | None:
     return bucket, object_key
 
 
-def upload_crop_file(local_path: Path, object_key: str) -> str:
-    """Upload a crop JPEG and return the ``storage:`` URI stored in ``crop_path``."""
+def upload_storage_file(local_path: Path, object_key: str, *, content_type: str) -> str:
+    """Upload a file and return the ``storage:`` URI."""
     settings = get_settings()
     bucket = settings.storage_bucket
     client = get_storage_client()
@@ -57,10 +57,15 @@ def upload_crop_file(local_path: Path, object_key: str) -> str:
         client.storage.from_(bucket).upload(
             object_key,
             handle,
-            file_options={"content-type": "image/jpeg", "upsert": "true"},
+            file_options={"content-type": content_type, "upsert": "true"},
         )
 
     return make_storage_uri(bucket, object_key)
+
+
+def upload_crop_file(local_path: Path, object_key: str) -> str:
+    """Upload a crop JPEG and return the ``storage:`` URI stored in ``crop_path``."""
+    return upload_storage_file(local_path, object_key, content_type="image/jpeg")
 
 
 def create_signed_crop_url(bucket: str, object_key: str, *, expires_in: int | None = None) -> str | None:
@@ -76,6 +81,10 @@ def create_signed_crop_url(bucket: str, object_key: str, *, expires_in: int | No
 
 def crop_object_key(video_id: int, brand: str, index: int) -> str:
     return f"{video_id}/{brand}_{index}.jpg"
+
+
+def annotated_object_key(video_id: int) -> str:
+    return f"{video_id}/annotated.mp4"
 
 
 def _bucket_names(buckets: list) -> set[str]:
