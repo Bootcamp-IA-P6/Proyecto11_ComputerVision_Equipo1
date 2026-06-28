@@ -147,6 +147,7 @@ def persist_video_detections(
 
     Returns ``(video_id, metrics_payload, crops_saved)``.
     """
+    from src.annotated_video import persist_annotated_video
     from src.crops import count_saved_crops, save_detection_crops
     from src.db.connection import get_db_session
     from src.db import repository
@@ -176,17 +177,18 @@ def persist_video_detections(
         metrics_payload = persist_visibility_analysis(
             session,
             video_id,
-            detections,
+            enriched,
             duration_sec=duration_sec,
             fps=fps,
             sample_stride=stride,
             video_filename=video_path.name,
         )
+        stored_annotated = persist_annotated_video(annotated_path, video_id)
         repository.update_video_status(
             session,
             video_id,
             status="done",
-            annotated_path=annotated_path,
+            annotated_path=stored_annotated,
         )
 
     if metrics_payload is not None:

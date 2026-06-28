@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from src.annotated_video import persist_annotated_video
 from src.crops import save_detection_crops
 from src.config import get_settings
 from src.db.connection import get_db_session
@@ -66,7 +67,7 @@ def analyze_video(video_path: Path, *, weights_path: Path | None = None) -> int:
             session,
             video_id,
             status="done",
-            annotated_path=annotated_path,
+            annotated_path=persist_annotated_video(annotated_path, video_id),
         )
 
     return video_id
