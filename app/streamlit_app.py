@@ -157,7 +157,18 @@ with tab_upload:
                     }
                 )
             if competitive:
-                competitive_data = competitive.dominant_brand
+                _brand_labels = {
+                    "coca_cola": "Coca-Cola",
+                    "pepsi": "Pepsi",
+                    "balanced": "Balanced / Equilibrado",
+                }
+                dominant = competitive.dominant_brand
+                balance = competitive.balance_label
+                dominant_label = _brand_labels.get(dominant, dominant)
+                if balance == "balanced" and dominant not in ("balanced", None):
+                    competitive_data = f"{dominant_label} (close race / reñido)"
+                else:
+                    competitive_data = dominant_label
             if report:
                 report_data = report.report_text
             for det in detections:
