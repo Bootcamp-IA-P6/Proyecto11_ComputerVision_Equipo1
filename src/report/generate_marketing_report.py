@@ -33,7 +33,13 @@ Coca-Cola dominó el tiempo en pantalla con {{ coca_cola.visible_seconds }}s de 
 {% elif balance_label == "pepsi_dominant" %}
 Pepsi lideró el tiempo en pantalla con {{ pepsi.visible_seconds }}s de presencia de marca visible ({{ pepsi.visibility_pct }}% del total del vídeo), por delante de Coca-Cola por {{ visibility_gap_sec }}s. Se recomienda acción.
 {% else %}
+{% if dominant_brand == "pepsi" %}
+Pepsi lideró ligeramente el tiempo en pantalla ({{ pepsi.visible_seconds }}s, {{ pepsi.visibility_pct }}%) frente a Coca-Cola ({{ coca_cola.visible_seconds }}s, {{ coca_cola.visibility_pct }}%). La diferencia ({{ visibility_gap_sec }}s) es menor al umbral de equilibrio — competencia muy reñida.
+{% elif dominant_brand == "coca_cola" %}
+Coca-Cola lideró ligeramente el tiempo en pantalla ({{ coca_cola.visible_seconds }}s, {{ coca_cola.visibility_pct }}%) frente a Pepsi ({{ pepsi.visible_seconds }}s, {{ pepsi.visibility_pct }}%). La diferencia ({{ visibility_gap_sec }}s) es menor al umbral de equilibrio — competencia muy reñida.
+{% else %}
 Ambas marcas estuvieron prácticamente equilibradas. Coca-Cola: {{ coca_cola.visible_seconds }}s ({{ coca_cola.visibility_pct }}%). Pepsi: {{ pepsi.visible_seconds }}s ({{ pepsi.visibility_pct }}%). Diferencia: {{ visibility_gap_sec }}s.
+{% endif %}
 {% endif %}
 
 ## Visibilidad de Coca-Cola
@@ -68,9 +74,19 @@ Ambas marcas estuvieron prácticamente equilibradas. Coca-Cola: {{ coca_cola.vis
 - Considerar aumentar los activos de marca Coca-Cola (pancartas, neveras, equipamiento de atletas) en momentos de alta exposición.
 - Analizar las marcas de tiempo específicas donde Pepsi lidera y atacar esas ubicaciones.
 {% else %}
-- El terreno de juego está nivelado — una pequeña inversión podría inclinar la balanza decisivamente a favor de Coca-Cola.
+{% if dominant_brand == "pepsi" %}
+- Pepsi lidera por un margen estrecho — vigilar de cerca este segmento y reforzar la presencia de Coca-Cola antes de que la brecha crezca.
+- Centrarse en los momentos donde Pepsi aparece y buscar mayor visibilidad o exclusividad de Coca-Cola.
+- Hacer seguimiento de esta métrica a lo largo del tiempo; la tendencia actual favorece a Pepsi.
+{% elif dominant_brand == "coca_cola" %}
+- Coca-Cola lidera por un margen estrecho — una pequeña inversión podría consolidar la ventaja frente a Pepsi.
 - Centrarse en los momentos donde ambas marcas aparecen y buscar exclusividad o mayor presencia de Coca-Cola.
 - Hacer seguimiento de esta métrica a lo largo del tiempo; una tendencia hacia el dominio de Pepsi sería una señal de alerta temprana.
+{% else %}
+- El terreno de juego está nivelado — una inversión focalizada podría inclinar la balanza a favor de Coca-Cola.
+- Centrarse en los momentos donde ambas marcas aparecen y buscar exclusividad o mayor presencia de Coca-Cola.
+- Hacer seguimiento de esta métrica a lo largo del tiempo para detectar cambios competitivos.
+{% endif %}
 {% endif %}
 
 ## Recomendación
@@ -79,7 +95,13 @@ Reforzar las ubicaciones ganadoras. La estrategia actual de Coca-Cola está dand
 {% elif balance_label == "pepsi_dominant" %}
 Aumentar la visibilidad de marca Coca-Cola en este segmento de contenido, priorizando los momentos donde Pepsi lidera según las métricas anteriores.
 {% else %}
+{% if dominant_brand == "pepsi" %}
+Reforzar la visibilidad de Coca-Cola en este segmento: Pepsi lidera por poco y la competencia está muy reñida.
+{% elif dominant_brand == "coca_cola" %}
+Consolidar la ligera ventaja actual de Coca-Cola con inversión en ubicaciones donde ya lidera.
+{% else %}
 Invertir en ubicación diferenciada para crear una ventaja clara de Coca-Cola frente al equilibrio actual entre ambas marcas.
+{% endif %}
 {% endif %}
 
 ---

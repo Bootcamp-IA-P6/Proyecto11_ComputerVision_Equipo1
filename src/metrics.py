@@ -14,6 +14,9 @@ For each brand, we count **unique frame numbers** with at least one detection
 
 ``balance_label`` is ``balanced`` when the visibility gap is under 5% of video
 duration; otherwise ``coca_cola_dominant`` or ``pepsi_dominant``.
+
+``dominant_brand`` is always the brand with more visible seconds (or
+``balanced`` on an exact tie), independent of the balance threshold.
 """
 
 from dataclasses import dataclass
@@ -91,16 +94,21 @@ def compute_competitive_analysis(
     coca_pct = coca.visibility_pct if coca else 0.0
     pepsi_pct = pepsi.visibility_pct if pepsi else 0.0
     gap = abs(coca_seconds - pepsi_seconds)
+    threshold_sec = (balance_threshold_pct / 100) * duration_sec
 
-    if gap < (balance_threshold_pct / 100) * duration_sec:
-        balance_label = "balanced"
+    if coca_seconds > pepsi_seconds:
+        dominant_brand = BRAND_COCA_COLA
+    elif pepsi_seconds > coca_seconds:
+        dominant_brand = BRAND_PEPSI
+    else:
         dominant_brand = "balanced"
+
+    if gap < threshold_sec:
+        balance_label = "balanced"
     elif coca_seconds >= pepsi_seconds:
         balance_label = "coca_cola_dominant"
-        dominant_brand = BRAND_COCA_COLA
     else:
         balance_label = "pepsi_dominant"
-        dominant_brand = BRAND_PEPSI
 
     return CompetitiveResult(
         dominant_brand=dominant_brand,
