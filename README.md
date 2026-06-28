@@ -1,6 +1,6 @@
 # BrandSight 🥤
 
-**Coca-Cola vs Pepsi — Brand Visibility Analysis / Análisis de Visibilidad de Marca**
+Brand visibility analysis for **Coca-Cola** vs **Pepsi** using custom YOLO11 detection, Supabase PostgreSQL + Storage, and AI-generated marketing reports.
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![YOLO11](https://img.shields.io/badge/YOLO11-large-0055FF?style=for-the-badge)
@@ -256,19 +256,24 @@ python scripts/smoke_deploy.py
 | `CONFIDENCE_THRESHOLD` | ❌ | Min detection confidence / Confianza mínima | Default: `0.5` |
 | `SAMPLE_STRIDE` | ❌ | Process every Nth frame / Procesar cada N frames | Default: `3` |
 
----
+1. Create a project at [supabase.com](https://supabase.com/)
+2. Run `sql/schema.sql` in the SQL Editor
+3. Run `sql/storage.sql` to create the `brandsight-crops` bucket
+4. Copy the **Session pooler** connection string into `.env` as `DATABASE_URL`
+5. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (Project Settings → API)
 
 ## Model Training / Entrenamiento del Modelo
 
-### Dataset
+```bash
+python -m scripts.check_db
+python -m scripts.check_storage
+python -m scripts.test_db_insert   # round-trip insert into videos (ISSUE-04)
+```
 
 **🇬🇧** Custom dataset of Coca-Cola and Pepsi logos, managed with **Roboflow**.
 **🇪🇸** Dataset personalizado de logos de Coca-Cola y Pepsi, gestionado con **Roboflow**.
 
-- **Classes / Clases:** `coca_cola` · `pepsi`
-- **Source / Fuente:** TV commercials, sports events, product placement / Anuncios, eventos deportivos, product placement
-- **Format / Formato:** YOLOv11 bounding boxes
-- **Split / División:** Train / Validation / Test (Roboflow standard)
+Place your fine-tuned `best.pt` in `models/` (Colab trains from the `yolo11l.pt` base checkpoint).
 
 ### Preprocessing & Augmentations / Preprocesado y Augmentaciones
 
@@ -307,9 +312,27 @@ python scripts/smoke_deploy.py
 ### Frame Sampling / Muestreo de Fotogramas
 
 ```
-frame_interval  = sample_stride / fps
-visible_seconds = unique_detected_frames × frame_interval
-visibility_pct  = (visible_seconds / total_duration) × 100
+app/                  Streamlit UI
+src/
+  config.py           Settings from .env
+  db/                 Supabase connection + ORM models
+  detect_image.py     Single-image inference CLI
+  detect_video.py     Video inference CLI
+  metrics.py          Visibility calculations
+  metrics_export.py   Metrics JSON/text export CLI (#9)
+  crops.py            Bbox crop extraction + Supabase Storage upload (#10)
+  supabase_storage.py Supabase Storage client for crop uploads
+  pipeline.py         End-to-end analysis orchestrator
+  report/             AI marketing report generator
+data/
+  demo/               Demo videos
+  crops/              Local crop cache (also uploaded to Supabase Storage)
+  uploads/            Uploaded videos (runtime)
+models/               best.pt (fine-tuned weights; training base: yolo11l.pt)
+sql/schema.sql        Supabase schema (5 tables)
+sql/storage.sql       Storage bucket `brandsight-crops` for crops
+notebooks/            Colab training (to add)
+docs/                 Project plans + Kanban
 ```
 
 | Parameter | Default | Meaning / Significado |
@@ -414,26 +437,14 @@ docker run -p 8501:8501 --env-file .env brandsight
 python scripts/smoke_deploy.py && python -m scripts.test_db_insert
 ```
 
----
-
-## Evaluation Criteria / Criterios de Evaluación
-
-| Criterion / Criterio | Implementation / Implementación |
-|----------------------|--------------------------------|
-| **Dataset** | Custom Roboflow dataset — 2 classes (`coca_cola`, `pepsi`) — bounding box annotations |
-| **Preprocessing** | 640×640 resize · automatic normalization via ultralytics |
-| **Fine-tuning** | YOLOv11 large pretrained on COCO → 50 epochs → 2-class specialization |
-| **Augmentations** | Flip · Rotation · Brightness · Contrast · Scale · Mosaic |
-| **Real-time detection** | `detect_webcam.py` — local live demo during presentation / demo en vivo durante presentación |
-| **Frame sampling** | Stride-based (default 3) · configurable via `SAMPLE_STRIDE` |
-
----
-
-## Team Roles / Roles del Equipo
+1. Push repo to GitHub (`models/best.pt` must be on the branch)
+2. [share.streamlit.io](https://share.streamlit.io) → New app → `app/streamlit_app.py`
+3. Paste secrets (see `.streamlit/secrets.toml.example`) — `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, etc.
+4. Deploy → verify sidebar **Supabase connected** → upload a short MP4 and run analysis
 
 | Role / Rol | Responsibilities / Responsabilidades |
 |------------|--------------------------------------|
-| **Product Owner (Mar Izquierdo Vaquer)** | Scope · user stories · README · demo videos · AI report · Streamlit UI · presentation / Alcance · historias de usuario · README · vídeos demo · informe IA · UI Streamlit · presentación |
+| **Product Owner + Frontend (Mar Izquierdo Vaquer)** | Scope · user stories · README · demo videos · AI report · Streamlit UI · presentation / Alcance · historias de usuario · README · vídeos demo · informe IA · UI Streamlit · presentación |
 | **Scrum Master + Backend (Mirae Kang)** | Kanban · Git/PRs · pipeline · Supabase · metrics · crops · deployment / Kanban · Git/PRs · pipeline · Supabase · métricas · recortes · despliegue |
 | **ML Engineer (Juan Miguel Iriondo Ortega)** | Dataset (Roboflow) · training (Colab) · `best.pt` · `detect_image` · `detect_webcam` |
 

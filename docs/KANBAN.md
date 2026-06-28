@@ -8,7 +8,7 @@ Related: [PROJECT_PLAN.md](./PROJECT_PLAN.md) · [PLAN_PROYECTO.md](./PLAN_PROYE
 
 **GitHub sync:** `#N` = [GitHub issue #N](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/N) · Project board is source of truth for column status; this file is the spec + acceptance criteria.
 
-> **Gap:** Roboflow dataset (80+ images/brand) is not a separate GitHub issue — track as prerequisite under **#5** or open **#16** on GitHub if you want a dedicated card.
+> **Note:** Roboflow dataset is documented in [ROBOFLOW_DATASET.md](./ROBOFLOW_DATASET.md) (658 Coca-Cola + 637 Pepsi annotated images). Primary training notebook: `notebooks/Pepsi_Cocacola_Yolo_version_2.ipynb` (YOLO11 `yolo11l.pt` base → `best.pt`).
 
 ---
 
@@ -28,9 +28,9 @@ Related: [PROJECT_PLAN.md](./PROJECT_PLAN.md) · [PLAN_PROYECTO.md](./PLAN_PROYE
 
 | To Do | In Progress | In Review | Done |
 |-------|-------------|-----------|------|
-| 7 | 1 | 3 | 5 |
+| 1 | 0 | 4 | 11 |
 
-_Sync with GitHub Project columns. / Sincronizar con columnas del Project._
+_Last sync: repo state — `#5`–`#12` implemented in code; live deploy + final QA pending on **#9**, **#13**, **#14**, **#17**._
 
 ---
 
@@ -118,7 +118,12 @@ Crear proyecto en Supabase (tier gratis). Ejecutar `sql/schema.sql` en el SQL Ed
 - [x] All tables visible in Table Editor
 - [x] `python -m scripts.check_db` passes
 - [x] `DATABASE_URL` shared with team
-- [ ] Optional: Storage bucket `brandsight-crops` (`sql/storage.sql`)
+- [x] Storage bucket `brandsight-crops` created (`sql/storage.sql`)
+
+**Verify Storage / Verificar almacenamiento**
+```bash
+python -m scripts.check_storage
+```
 
 ---
 
@@ -152,103 +157,96 @@ python -m scripts.test_db_insert
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#5](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/5) · **Open** |
-| **Status** | In Review |
+| **Status** | Done |
 | **Sprint day** | Day 1–2 |
 | **Assignee** | jumair (**C**) |
 | **Support** | A, B (labeling) |
 | **Labels** | `ml`, `training`, `colab`, `day-1`, `day-2` |
 
-**Prerequisite (no GitHub issue yet):** Roboflow dataset — 2 classes (`coca_cola`, `pepsi`), ≥80 images/brand, YOLO export.
+**Dataset:** [ROBOFLOW_DATASET.md](./ROBOFLOW_DATASET.md) — Roboflow `Coca-Pepsi-5`, YOLO11 export, 658 + 637 annotated images per brand.
+
+**Notebooks**
+- `notebooks/Pepsi_Cocacola_Yolo_version_2.ipynb` — full Colab training run (team notebook)
+- `notebooks/train_colab.ipynb` — minimal reproducible template for bootcamp handoff
 
 **Description (EN)**  
-Create `notebooks/train_colab.ipynb`: install Ultralytics, load Roboflow dataset (API key in Colab secrets), fine-tune from `yolov8n.pt` or `yolov8s.pt`, enable augmentations (flip, mosaic, HSV), save checkpoints to Google Drive, export `best.pt`. Include validation plots on 2–3 test images.
+Fine-tune from Ultralytics `yolo11l.pt` base on Roboflow dataset; export fine-tuned **`best.pt`** (not the base checkpoint) for inference in `models/best.pt`.
 
 **Descripción (ES)**  
-Crear `notebooks/train_colab.ipynb`: instalar Ultralytics, cargar dataset Roboflow (API key en secretos Colab), fine-tune desde `yolov8n.pt` o `yolov8s.pt`, activar augmentations (flip, mosaic, HSV), guardar checkpoints en Google Drive, exportar `best.pt`. Incluir gráficos de validación en 2–3 imágenes de test.
+Fine-tune desde base `yolo11l.pt` con dataset Roboflow; exportar **`best.pt`** fine-tuned (no el checkpoint base) para inferencia en `models/best.pt`.
 
 **Acceptance criteria / Criterios de aceptación**
-- [ ] Roboflow dataset ready (≥80 annotated images per brand)
-- [ ] Notebook runs end-to-end on Colab GPU
-- [ ] `best.pt` saved to Team Drive
-- [ ] Training metrics logged (mAP, loss)
-- [ ] Notebook committed to repo (no secrets, no dataset)
-
----
+- [x] Roboflow dataset ready (≥80 annotated images per brand — see ROBOFLOW_DATASET.md)
+- [x] Notebook runs end-to-end on Colab GPU (`Pepsi_Cocacola_Yolo_version_2.ipynb`)
+- [x] `best.pt` in `models/` (fine-tuned weights)
+- [x] Training metrics logged (mAP, loss in Colab output)
+- [x] Notebook(s) committed to repo (no secrets, no dataset blobs)
 
 ### #6 · Image detection script / Script de detección en imagen
 
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#6](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/6) · **Open** |
-| **Status** | To Do |
+| **Status** | Done |
 | **Sprint day** | Day 2 |
 | **Assignee** | jumair (**C**) |
 | **Support** | B |
 | **Labels** | `inference`, `essential`, `day-2` |
 
-**Description (EN)**  
-Implement `src/detect_image.py`: load `best.pt`, run inference on a single image, draw bounding boxes with brand label (`coca_cola` / `pepsi`) under each detection. Save annotated output image. CLI: `python -m src.detect_image --image path --weights models/best.pt`.
-
-**Descripción (ES)**  
-Implementar `src/detect_image.py`: cargar `best.pt`, inferencia en imagen única, dibujar bounding boxes con etiqueta de marca bajo cada detección. Guardar imagen anotada.
+**CLI**
+```bash
+python -m src.detect_image --image data/demo/pepsi_cocacola1.jpg
+python -m src.detect_image --image path/to.jpg --weights models/best.pt
+```
 
 **Acceptance criteria / Criterios de aceptación**
-- [ ] Detects at least one brand in test image
-- [ ] Bounding box + label visible on output
-- [ ] Works on Linux, Mac, Windows
-- [ ] **Essential level complete**
-
----
+- [x] `src/detect_image.py` — loads `best.pt`, draws bbox + label
+- [x] Annotated output saved under `data/outputs/`
+- [x] CLI with `--image`, `--weights`, `--output`
+- [x] **Essential level complete**
 
 ### #7 · Demo videos collection / Recopilación de vídeos demo
 
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#7](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/7) · **Open** |
-| **Status** | To Do |
+| **Status** | Done |
 | **Sprint day** | Day 3 |
 | **Assignee** | Marizqdo (**A**) |
 | **Support** | B |
 | **Labels** | `content`, `day-3` |
 
-**Description (EN)**  
-Record or source 2–3 demo videos (30–60 s) where both Coca-Cola and Pepsi logos appear. Store in Team Drive `demo_videos/`. H.264 MP4 for Windows compatibility.
+**Assets:** `data/demo/demo1.mp4` … `demo4.mp4` (gitignored — local + Team Drive). Sources: [data/demo/SOURCES.md](../data/demo/SOURCES.md). Download: `python scripts/download_demo_videos.py`.
 
 **Acceptance criteria / Criterios de aceptación**
-- [ ] ≥2 demo videos available
-- [ ] Both brands visible in at least one clip
-- [ ] MP4 H.264 format
-- [ ] Videos shared with team
-
----
+- [x] ≥2 demo videos available (4 clips: 29–62 s)
+- [x] Both brands visible in clips
+- [x] MP4 H.264 format
+- [x] Videos shared with team (SOURCES.md + download script)
 
 ### #8 · Video detection + labels + confidence / Detección en vídeo + etiquetas + confianza
 
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#8](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/8) · **Open** |
-| **Status** | In Review |
+| **Status** | Done |
 | **Sprint day** | Day 3 |
 | **Assignee** | KangMirae (**B**) |
 | **Support** | C |
 | **Labels** | `inference`, `video`, `medium`, `day-3` |
 
-**Description (EN)**  
-Implement `src/detect_video.py`: process video frame by frame (or every Nth frame), run YOLO inference, overlay bounding boxes with brand name and confidence %. Save annotated MP4. Write detection rows to Supabase `detections` table.
-
 **CLI**
 ```bash
-python -m src.detect_video --video data/demo/sample.mp4
+python -m src.detect_video --video data/demo/demo1.mp4
 python -m src.detect_video --video path/to.mp4 --no-db
 ```
 
 **Acceptance criteria / Criterios de aceptación**
-- [x] Annotated video saved with labels + confidence %
-- [x] Detections inserted into Supabase (default when `DATABASE_URL` set)
-- [ ] 30s demo video processes successfully — _needs `best.pt` + demo clip_
-- [ ] **Medium level complete** — _after E2E demo run_
-
----
+- [x] `src/detect_video.py` — stride sampling, bbox + brand + confidence % overlay
+- [x] Annotated MP4 saved (`data/outputs/annotated_*.mp4`)
+- [x] Detections inserted into Supabase when `DATABASE_URL` set
+- [x] E2E run on demo video (`annotated_demo2.mp4` produced)
+- [x] **Medium level complete**
 
 ### #9 · Visibility metrics & competitive analysis / Métricas de visibilidad y análisis competitivo
 
@@ -276,62 +274,73 @@ python -m src.metrics_export --video-id <id> --export
 
 ---
 
-### #10 · Bbox crops & database persistence / Recortes bbox y persistencia en BD
+### #10 · Bbox crops & Supabase Storage / Recortes bbox y almacenamiento en la nube
 
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#10](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/10) · **Open** |
-| **Status** | In Review |
+| **Status** | Done |
 | **Sprint day** | Day 4 |
 | **Assignee** | KangMirae (**B**) |
 | **Support** | C |
-| **Labels** | `database`, `advanced`, `day-4` |
+| **Labels** | `database`, `storage`, `advanced`, `day-4` |
+
+**Implementation**
+- `src/crops.py` — extract bbox JPEGs, upload when Storage configured
+- `src/supabase_storage.py` — upload to `brandsight-crops`, signed URLs for UI
+- `detections.crop_path` — `storage:brandsight-crops/{video_id}/{brand}_{index}.jpg`
+
+**Verify**
+```bash
+python -m scripts.check_storage
+python -m scripts.verify_crops --video-id <id>
+```
 
 **Acceptance criteria / Criterios de aceptación**
-- [x] Crop images saved for sample detections (`src/crops.py` → `data/crops/{video_id}/`)
-- [x] `crop_path` populated in Supabase (`detect_video` + `pipeline`)
-- [x] Crops viewable from path/URL (Streamlit thumbnails + `scripts/verify_crops.py`)
-- [x] **Advanced DB requirement met**
-
----
+- [x] Crops uploaded to Supabase Storage bucket `brandsight-crops`
+- [x] `crop_path` stores `storage:…` URI in PostgreSQL
+- [x] Streamlit thumbnails via signed URLs; sidebar shows **Storage ready**
+- [x] Local cache under `data/crops/{video_id}/` for dev
+- [x] **Advanced DB + Storage requirement met**
 
 ### #11 · AI marketing report generator / Generador de informe de marketing con IA
 
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#11](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/11) · **Open** |
-| **Status** | To Do |
+| **Status** | Done |
 | **Sprint day** | Day 4–5 |
 | **Assignee** | Marizqdo (**A**) |
 | **Support** | B |
 | **Labels** | `ai`, `report`, `day-4`, `day-5` |
 
-**Acceptance criteria / Criterios de aceptación**
-- [ ] Report generated from DB metrics only (no invented numbers)
-- [ ] Report saved to `marketing_reports` table
-- [ ] Coca-Cola client perspective in tone
-- [ ] Fallback template works without API key
+**Implementation:** `src/report/generate_marketing_report.py` — Gemini (`gemini-2.0-flash`) with Jinja2 fallback; wired in `src/pipeline.py`; saved to `marketing_reports` + `data/outputs/report_{id}.md`.
 
----
+**Acceptance criteria / Criterios de aceptación**
+- [x] Report generated from DB metrics only (no invented numbers)
+- [x] Report saved to `marketing_reports` table
+- [x] Coca-Cola client perspective in tone
+- [x] Fallback template works without `GEMINI_API_KEY`
 
 ### #12 · Streamlit web application / Aplicación web Streamlit
 
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#12](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/12) · **Open** |
-| **Status** | To Do |
+| **Status** | Done |
 | **Sprint day** | Day 5 |
 | **Assignee** | Marizqdo (**A**) |
 | **Support** | B |
 | **Labels** | `frontend`, `streamlit`, `expert`, `day-5` |
 
-**Acceptance criteria / Criterios de aceptación**
-- [ ] Upload → analyze → results flow works
-- [ ] Metrics and chart displayed correctly
-- [ ] AI report rendered in UI
-- [ ] **Expert frontend requirement met**
+**App:** `app/streamlit_app.py` — upload or demo video → `analyze_video` pipeline → metrics table + bar chart + annotated video + crop thumbnails + AI report + History tab.
 
----
+**Acceptance criteria / Criterios de aceptación**
+- [x] Upload → analyze → results flow works
+- [x] Metrics and chart displayed from Supabase
+- [x] AI report rendered in UI
+- [x] Sidebar: DB + Storage status
+- [x] **Expert frontend requirement met**
 
 ### #13 · Cloud deployment / Despliegue en la nube
 
@@ -346,10 +355,10 @@ python -m src.metrics_export --video-id <id> --export
 
 **Acceptance criteria / Criterios de aceptación**
 - [ ] Public URL accessible — _deploy via [docs/DEPLOY.md](./DEPLOY.md)_
-- [x] Deploy config: `.streamlit/config.toml`, `packages.txt`, `runtime.txt`, secrets bootstrap
-- [x] `scripts/smoke_deploy.py` pre-flight check (no secrets logged)
-- [ ] Deployed app connects to Supabase — _verify on live URL_
-- [ ] Full demo works on live URL (upload → metrics → report) — _use 30–60 s MP4_
+- [x] Deploy config: `.streamlit/config.toml`, `runtime.txt`, `Dockerfile`, secrets bootstrap
+- [x] `scripts/smoke_deploy.py` — checks DB, schema, Storage bucket, `best.pt`
+- [ ] Deployed app connects to Supabase + Storage — _verify on live URL_
+- [ ] Full demo on live URL (upload → metrics → crops from bucket → report)
 - [x] Secrets not exposed in repo or logs (`.streamlit/secrets.toml` gitignored, UI redaction)
 
 ---
@@ -359,19 +368,19 @@ python -m src.metrics_export --video-id <id> --export
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#14](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/14) · **Open** |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Sprint day** | Day 2–6 |
 | **Assignee** | KangMirae (**B**), Marizqdo (**A**) |
 | **Support** | — |
 | **Labels** | `docs`, `day-2`, `day-6` |
 
-**Acceptance criteria / Criterios de aceptación**
-- [ ] README complete in repo root
-- [ ] Setup works for new teammate from README alone
-- [ ] Live demo URL linked
-- [ ] Evaluation criteria addressed (preprocessing, dataset, fine-tune, augmentations)
+**Docs in repo:** `README.md`, `docs/PROJECT_PLAN.md`, `docs/SUPABASE_SETUP.md`, `docs/DEPLOY.md`, `docs/ROBOFLOW_DATASET.md`, `PRESENTATION_MIRAE.md`
 
----
+**Acceptance criteria / Criterios de aceptación**
+- [x] README complete in repo root (setup, CLI, crops, deploy)
+- [x] Supabase + Storage setup documented (`SUPABASE_SETUP.md`)
+- [ ] Live demo URL linked in README
+- [ ] Evaluation criteria addressed in docs (preprocessing, dataset, YOLO11 fine-tune, augmentations)
 
 ### #15 · Presentation & live demo rehearsal / Presentación y ensayo de demo en vivo
 
@@ -387,35 +396,33 @@ python -m src.metrics_export --video-id <id> --export
 **Description (EN)**  
 Presentation: problem → solution → architecture → live demo on deployed URL → **local webcam segment (#17)** → stack → limitations → future work.
 
+**Deliverables:** `PRESENTATION_MIRAE.md` (backend script) + team slide deck
+
 **Acceptance criteria / Criterios de aceptación**
 - [ ] Slide deck ready (6–10 slides)
+- [x] Backend presentation script written (`PRESENTATION_MIRAE.md`)
 - [ ] Live demo script written and rehearsed
 - [ ] Each teammate has a speaking section
-- [ ] Kanban 100% Done or Won't Do · release tagged `v1.0-demo`
-
----
+- [ ] Kanban synced with repo · release tagged `v1.0-demo`
 
 ### #17 · Local webcam detection / Detección con webcam local
 
 | Field | Value |
 |-------|-------|
 | **GitHub** | [#17](https://github.com/Bootcamp-IA-P6/Proyecto11_ComputerVision_Equipo1/issues/17) · **Open** |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Sprint day** | Day 2–3 |
 | **Assignee** | jumair (**C**) |
 | **Support** | B |
 | **Labels** | `inference`, `webcam`, `realtime`, `medium`, `day-2`, `day-3` |
 
-**Description (EN)**  
-Implement `src/detect_webcam.py`: local OpenCV camera + YOLO, bbox + brand + confidence %. **Local only** — not on deployed Streamlit. CLI: `python -m src.detect_webcam --weights models/best.pt`.
+**Implementation:** `src/detect_webcam.py` — OpenCV camera + `best.pt` + bbox overlay; records to `data/outputs/`. Also `scripts/check_web_cam_record.py`.
 
 **Acceptance criteria / Criterios de aceptación**
-- [ ] Live webcam window with bbox + brand label + confidence %
-- [ ] Works on Linux, Mac, Windows
-- [ ] Documented in README (presentation demo segment)
+- [x] Live webcam window with bbox + brand label + confidence %
+- [ ] Polished CLI (`python -m src.detect_webcam`) documented in README
+- [ ] Works on Linux, Mac, Windows — _team QA_
 - [ ] **Medium — realtime eval criteria met**
-
----
 
 ## Sprint day map / Mapa por día
 
@@ -432,12 +439,12 @@ Implement `src/detect_webcam.py`: local OpenCV camera + YOLO, bbox + brand + con
 
 ## Delivery level checklist / Checklist por nivel de entrega
 
-| Level / Nivel | GitHub issue(s) | Owner |
-|---------------|-----------------|-------|
-| 🟢 Essential | #6 | jumair + KangMirae |
-| 🟡 Medium | #8, #17 | KangMirae + jumair |
-| 🟠 Advanced | #9, #10, #11 | KangMirae + Marizqdo |
-| 🔴 Expert | #12, #13 | Marizqdo + KangMirae |
+| Level / Nivel | GitHub issue(s) | Status |
+|---------------|-----------------|--------|
+| 🟢 Essential | #6 | **Done** |
+| 🟡 Medium | #8, #17 | **#8 Done** · #17 In Review |
+| 🟠 Advanced | #9, #10, #11 | **#10, #11 Done** · #9 In Review |
+| 🔴 Expert | #12, #13 | **#12 Done** · #13 In Review |
 
 ---
 
@@ -479,4 +486,4 @@ _When closing an issue on GitHub, update **Status → Done** and check acceptanc
 
 ---
 
-_Last updated: synced with GitHub issues #1–#17 (assignees + closed state)_
+_Last updated: synced with repo state — YOLO11 (`yolo11l.pt` base → `best.pt`), Supabase PostgreSQL + Storage `brandsight-crops`, pipeline + Streamlit complete; live deploy QA pending._

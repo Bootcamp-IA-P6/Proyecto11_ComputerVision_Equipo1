@@ -1,4 +1,4 @@
--- BrandSight — optional Supabase Storage bucket for bbox crops (ISSUE-03 / ISSUE-11)
+-- BrandSight — Supabase Storage bucket for bbox crops (ISSUE-03 / ISSUE-10)
 -- Run in SQL Editor after schema.sql, or create the bucket in Dashboard → Storage.
 
 INSERT INTO storage.buckets (id, name, public)

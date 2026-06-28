@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     database_url: str = ""
     supabase_url: str = ""
     supabase_service_role_key: str = ""
+    storage_bucket: str = "brandsight-crops"
+    crop_signed_url_seconds: int = 3600
     gemini_api_key: str = ""
     openai_api_key: str = ""
     model_path: Path = PROJECT_ROOT / "models" / "best.pt"
